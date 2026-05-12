@@ -521,6 +521,7 @@
         <option value="2">GLOW WAVES</option>
         <option value="3">GEOMETRIC RUSH</option>
         <option value="4">EUPHORIC SPIRAL</option>
+        <option value="5">WHITE VOID</option>
       </select>
     </label>
     <label>
@@ -639,6 +640,12 @@ const tripMat = new THREE.ShaderMaterial({
       } else if (uMode == 4) {
         float v = sin(a*3.0 + uTime*2.0) * 0.5;
         col = hsv2rgb(vec3(fract(uTime*0.2 + a*0.16), 0.8, 0.5 + 0.5*v));
+      } else if (uMode == 5) {
+        float v = pow(max(0.0, 1.0 - r * 1.6), 2.5);
+        float pulse = 0.5 + 0.5 * sin(uTime * 1.1);
+        vec3 core = vec3(v * (0.55 + 0.6 * pulse) * 1.4);
+        vec3 halo = hsv2rgb(vec3(0.13 + 0.04 * sin(uTime * 0.4), 0.6, 0.15 * (1.0 - v)));
+        col = core + halo;
       }
       gl_FragColor = vec4(col, uIntensity);
     }
@@ -655,6 +662,13 @@ const drugs = {
   shrooms:    { duration: 24, tripMode: 2 },
   psilocybin: { duration: 24, tripMode: 2 },
   dmt:        { duration: 14, tripMode: 3 },
+  '5-meo-dmt (toad)': { duration: 14, tripMode: 5 },
+  '5-meo-dmt': { duration: 14, tripMode: 5 },
+  '5 meo dmt': { duration: 14, tripMode: 5 },
+  '5meodmt':   { duration: 14, tripMode: 5 },
+  '5meo':      { duration: 14, tripMode: 5 },
+  toad:        { duration: 14, tripMode: 5 },
+  bufo:        { duration: 14, tripMode: 5 },
   mdma:       { duration: 22, tripMode: 4 },
   ecstasy:    { duration: 22, tripMode: 4 },
   molly:      { duration: 22, tripMode: 4 },
@@ -707,6 +721,44 @@ const effects = {
     head.scale.setScalar(1 + Math.sin(t * 14) * 0.18 * i);
     avatar.rotation.y = t * 0.9 * i;
   },
+  '5-meo-dmt (toad)': (t, i) => {
+    const elapsed = Math.max(0, t - state.startTime);
+    const cycleLen = 7;
+    const phase = (elapsed % cycleLen) / cycleLen;
+    skin.color.setHex(0xffffff);
+    if (phase < 0.5) {
+      const p = phase / 0.5;
+      const ease = p * p;
+      avatar.scale.setScalar(1 + ease * 0.6);
+      skin.emissive.setRGB(ease, ease * 0.96, ease * 0.86);
+      avatar.rotation.y = ease * Math.PI * 0.4;
+      leftEye.visible = p < 0.4;
+      rightEye.visible = p < 0.4;
+    } else if (phase < 0.62) {
+      const p = (phase - 0.5) / 0.12;
+      const ease = 1 - Math.pow(1 - p, 3);
+      avatar.scale.setScalar(1.6 - ease * 1.58);
+      skin.emissive.setRGB(1 - ease * 0.25, 0.96 - ease * 0.25, 0.86 - ease * 0.25);
+      leftEye.visible = false;
+      rightEye.visible = false;
+    } else if (phase < 0.85) {
+      avatar.scale.setScalar(0.02);
+      skin.emissive.setRGB(0.75, 0.7, 0.6);
+      leftEye.visible = false;
+      rightEye.visible = false;
+    } else {
+      const p = (phase - 0.85) / 0.15;
+      const ease = 1 - Math.pow(1 - p, 4);
+      avatar.scale.setScalar(0.02 + ease * 0.98);
+      skin.emissive.setRGB(0.75 - ease * 0.55, 0.7 - ease * 0.55, 0.6 - ease * 0.55);
+    }
+  },
+  '5-meo-dmt': (t, i) => effects['5-meo-dmt (toad)'](t, i),
+  '5 meo dmt': (t, i) => effects['5-meo-dmt (toad)'](t, i),
+  '5meodmt':   (t, i) => effects['5-meo-dmt (toad)'](t, i),
+  '5meo':      (t, i) => effects['5-meo-dmt (toad)'](t, i),
+  toad:        (t, i) => effects['5-meo-dmt (toad)'](t, i),
+  bufo:        (t, i) => effects['5-meo-dmt (toad)'](t, i),
   mdma: (t, i) => {
     const hue = (t * 0.4) % 1;
     skin.color.setHSL(hue, 0.5, 0.7);
@@ -849,6 +901,7 @@ const tracks = {
   lsd:        { title: 'White Rabbit',           artist: 'Jefferson Airplane',         preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9d/7f/c6/9d7fc652-907c-b040-3ee0-07de78b6e064/mzaf_5136406247672899456.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5c/bd/17/5cbd17d6-ceea-e185-e889-ee494cc650da/828765035125.jpg/100x100bb.jpg' },
   mushrooms:  { title: 'Tomorrow Never Knows',   artist: 'The Beatles',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/c8/f8/b7/c8f8b737-1697-de3a-5345-571e0a9722cc/mzaf_9296497573197633805.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/58/4a/10/584a1058-de0a-6a6b-d0bd-da09a028b8bc/00602567705499.rgb.jpg/100x100bb.jpg' },
   dmt:        { title: 'Astronomy Domine',       artist: 'Pink Floyd',                  preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/4f/91/c0/4f91c072-5a27-3737-8aae-491196ef4572/mzaf_13281052479360747595.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e7/b4/d3/e7b4d3e0-66d5-0cea-4054-47f3e8bae778/886445635799.jpg/100x100bb.jpg' },
+  '5-meo-dmt (toad)': { title: 'Joy to the World', artist: 'Three Dog Night',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/eb/86/57/eb8657bc-824f-e158-dafd-c6fe01774310/mzaf_368319421024912021.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/5d/18/ce/5d18ce82-f8f9-cb59-1e18-4bf2e01d0a24/00602498614709.rgb.jpg/100x100bb.jpg' },
   mdma:       { title: 'Strobe',                 artist: 'deadmau5',                    preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/92/1b/11921b51-1ed8-ecf1-cb92-41c7af1e2942/mzaf_7176793560074956543.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f7/24/19/f724197c-b6b7-b2ad-94a9-06b2f5f95455/617465226458.jpg/100x100bb.jpg' },
   ketamine:   { title: 'Three Little Birds',     artist: 'Bob Marley & The Wailers',    preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/af/fc/90/affc9056-e658-fe90-0f07-a8790d1d7265/mzaf_9608562567489878696.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3c/c2/0d/3cc20dcc-8f4e-f060-36dd-7de52a7ec8fe/12UMGIM14712.rgb.jpg/100x100bb.jpg' },
   weed:       { title: 'I Wanna Get High',       artist: 'Cypress Hill',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dd/49/ac/dd49ac4c-a83c-9976-4cce-66bb3394fc73/mzaf_16154692503504516639.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/63/01/43/63014383-c3f0-d31d-46a7-5cecb3dece1d/074645729626.jpg/100x100bb.jpg' },
@@ -870,6 +923,7 @@ const aliasGroups = [
   ['weed', 'cannabis', 'marijuana'],
   ['alcohol', 'beer', 'wine'],
   ['heroin', 'opioid'],
+  ['5-meo-dmt (toad)', '5-meo-dmt', '5 meo dmt', '5meodmt', '5meo', 'toad', 'bufo'],
 ];
 aliasGroups.forEach(([canon, ...rest]) => rest.forEach(k => { if (tracks[canon]) tracks[k] = tracks[canon]; }));
 
@@ -963,7 +1017,7 @@ function addMenuChip(label, key) {
 }
 
 const menuItems = [
-  ['LSD', 'lsd'], ['MUSHROOMS', 'mushrooms'], ['DMT', 'dmt'], ['MDMA', 'mdma'],
+  ['LSD', 'lsd'], ['MUSHROOMS', 'mushrooms'], ['DMT', 'dmt'], ['5-MEO-DMT (TOAD)', '5-meo-dmt (toad)'], ['MDMA', 'mdma'],
   ['KETAMINE', 'ketamine'], ['WEED', 'weed'], ['ALCOHOL', 'alcohol'], ['CAFFEINE', 'caffeine'],
   ['NICOTINE', 'nicotine'], ['ADDERALL', 'adderall'], ['COCAINE', 'cocaine'],
   ['METH', 'meth'], ['HEROIN', 'heroin'],
