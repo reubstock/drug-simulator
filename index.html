@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>INGEST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --fg: #f4f4f4;
+    --accent: #ff5b1f;
+    --muted: #555;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  }
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: 100vh;
+  }
+  .panel {
+    padding: 6vh 5vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 40px;
+  }
+  h1 {
+    font-size: clamp(80px, 14vw, 240px);
+    font-weight: 900;
+    letter-spacing: -0.05em;
+    line-height: 0.82;
+  }
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    max-width: 560px;
+  }
+  input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--muted);
+    color: var(--fg);
+    font-size: clamp(28px, 4vw, 56px);
+    font-weight: 700;
+    padding: 12px 0;
+    font-family: inherit;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: border-color 0.2s;
+  }
+  input::placeholder { color: var(--muted); }
+  input:focus { border-bottom-color: var(--accent); }
+  button {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 22px 36px;
+    font-size: clamp(20px, 2.2vw, 28px);
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    cursor: pointer;
+    font-family: inherit;
+    align-self: flex-start;
+    transition: transform 0.1s, background 0.2s;
+  }
+  button:hover { background: var(--fg); }
+  button:active { transform: translateY(2px); }
+  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .stage { position: relative; background: #050505; }
+  canvas { display: block; width: 100%; height: 100%; }
+  .hud {
+    position: absolute;
+    bottom: 28px;
+    left: 28px;
+    right: 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .hud .status { color: var(--fg); }
+  .bar {
+    width: 160px; height: 3px;
+    background: rgba(255,255,255,0.1);
+    overflow: hidden;
+  }
+  .bar > i {
+    display: block; height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.15s linear;
+  }
+  @media (max-width: 820px) {
+    main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    .panel { padding: 4vh 6vw; }
+    h1 { font-size: 22vw; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="panel">
+    <h1>DRUGS</h1>
+    <div class="controls">
+      <input id="drug" type="text" placeholder="LSD" autocomplete="off" spellcheck="false" />
+      <button id="ingest">INGEST</button>
+    </div>
+  </section>
+  <section class="stage">
+    <canvas id="c"></canvas>
+    <div class="hud">
+      <div class="status" id="status">SOBER</div>
+      <div class="bar"><i id="bar"></i></div>
+    </div>
+  </section>
+</main>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050505);
+
+const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
+camera.position.set(0, 1.4, 6.5);
+camera.lookAt(0, 1.1, 0);
+
+const avatar = new THREE.Group();
+scene.add(avatar);
+
+const skin = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.45, metalness: 0.05 });
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
+
+const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 4), skin);
+head.position.y = 2;
+avatar.add(head);
+
+const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.65, 1.4, 8, 16), skin);
+body.position.y = 0.5;
+avatar.add(body);
+
+const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
+const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
+leftEye.position.set(-0.28, 2.12, 0.78);
+avatar.add(leftEye);
+const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
+rightEye.position.set(0.28, 2.12, 0.78);
+avatar.add(rightEye);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(3, 32),
+  new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 1 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.position.y = -0.4;
+scene.add(ground);
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+const key = new THREE.DirectionalLight(0xffffff, 1.4);
+key.position.set(3, 6, 5);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff5b1f, 0.55);
+rim.position.set(-4, 2, -3);
+scene.add(rim);
+
+const tripMat = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uIntensity: { value: 0 },
+    uMode: { value: 0 },
+  },
+  transparent: true,
+  depthWrite: false,
+  vertexShader: `
+    varying vec2 vUv;
+    void main() {
+      vUv = uv;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    varying vec2 vUv;
+    uniform float uTime;
+    uniform float uIntensity;
+    uniform int uMode;
+    vec3 hsv2rgb(vec3 c){
+      vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
+      vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+      return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
+    void main() {
+      vec2 p = vUv - 0.5;
+      float r = length(p);
+      float a = atan(p.y, p.x);
+      vec3 col = vec3(0.0);
+      if (uMode == 1) {
+        float k = 6.0;
+        float aa = mod(a, 6.2831/k) - 3.1415/k;
+        vec2 q = vec2(cos(aa), sin(aa)) * r;
+        float v = sin(q.x*22.0 + uTime*2.0) + sin(q.y*18.0 - uTime*1.7);
+        col = hsv2rgb(vec3(fract(v*0.12 + uTime*0.08), 0.85, 0.65));
+      } else if (uMode == 2) {
+        float v = sin(r*28.0 - uTime*1.8);
+        col = hsv2rgb(vec3(0.05 + 0.08*sin(uTime*0.5), 0.55, 0.4 + v*0.25));
+      } else if (uMode == 3) {
+        float v = sin(a*8.0 + uTime*5.0)*0.5 + sin(r*44.0 - uTime*8.0)*0.5;
+        col = hsv2rgb(vec3(fract(v*0.4 + uTime*0.35), 1.0, 0.55 + 0.45*v));
+      } else if (uMode == 4) {
+        float v = sin(a*3.0 + uTime*2.0) * 0.5;
+        col = hsv2rgb(vec3(fract(uTime*0.2 + a*0.16), 0.8, 0.5 + 0.5*v));
+      }
+      gl_FragColor = vec4(col, uIntensity);
+    }
+  `,
+});
+const tripPlane = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), tripMat);
+tripPlane.position.z = -8;
+scene.add(tripPlane);
+
+const drugs = {
+  lsd:        { duration: 28, tripMode: 1 },
+  acid:       { duration: 28, tripMode: 1 },
+  mushrooms:  { duration: 24, tripMode: 2 },
+  shrooms:    { duration: 24, tripMode: 2 },
+  psilocybin: { duration: 24, tripMode: 2 },
+  dmt:        { duration: 14, tripMode: 3 },
+  mdma:       { duration: 22, tripMode: 4 },
+  ecstasy:    { duration: 22, tripMode: 4 },
+  molly:      { duration: 22, tripMode: 4 },
+  caffeine:   { duration: 12 },
+  coffee:     { duration: 12 },
+  cocaine:    { duration: 14 },
+  coke:       { duration: 14 },
+  weed:       { duration: 20 },
+  cannabis:   { duration: 20 },
+  marijuana:  { duration: 20 },
+  alcohol:    { duration: 18 },
+  beer:       { duration: 18 },
+  wine:       { duration: 18 },
+  ketamine:   { duration: 16 },
+  k:          { duration: 16 },
+  meth:       { duration: 18 },
+  heroin:     { duration: 20 },
+  opioid:     { duration: 20 },
+  nicotine:   { duration: 8 },
+  adderall:   { duration: 14 },
+  unknown:    { duration: 12 },
+};
+
+const effects = {
+  lsd: (t, i) => {
+    const hue = (t * 0.1) % 1;
+    skin.color.setHSL(hue, 0.55, 0.7);
+    skin.emissive.setHSL(hue, 1, 0.22 * i);
+    head.scale.setScalar(1 + Math.sin(t * 2) * 0.12 * i);
+    avatar.rotation.y = Math.sin(t * 0.7) * 0.55 * i;
+    avatar.rotation.z = Math.sin(t * 1.1) * 0.18 * i;
+    avatar.position.y = Math.sin(t * 0.6) * 0.1 * i;
+  },
+  acid: (t, i) => effects.lsd(t, i),
+  mushrooms: (t, i) => {
+    const breathe = Math.sin(t * 0.9) * 0.16 * i;
+    head.scale.setScalar(1 + breathe);
+    body.scale.set(1 + breathe * 0.6, 1, 1 + breathe * 0.6);
+    avatar.rotation.x = Math.sin(t * 0.4) * 0.12 * i;
+    skin.color.setHSL(0.05 + Math.sin(t * 0.3) * 0.06, 0.42, 0.6);
+    skin.emissive.setHSL(0.08, 0.4, 0.12 * i);
+  },
+  shrooms: (t, i) => effects.mushrooms(t, i),
+  psilocybin: (t, i) => effects.mushrooms(t, i),
+  dmt: (t, i) => {
+    const hue = (t * 0.6) % 1;
+    skin.emissive.setHSL(hue, 1, 0.45 * i);
+    skin.color.setHSL(hue, 0.5, 0.6);
+    avatar.position.z = Math.sin(t * 9) * 0.35 * i;
+    head.scale.setScalar(1 + Math.sin(t * 14) * 0.18 * i);
+    avatar.rotation.y = t * 0.9 * i;
+  },
+  mdma: (t, i) => {
+    const hue = (t * 0.4) % 1;
+    skin.color.setHSL(hue, 0.5, 0.7);
+    skin.emissive.setHSL(hue, 0.9, 0.28 * i);
+    avatar.position.y = Math.abs(Math.sin(t * 3)) * 0.45 * i;
+    avatar.rotation.y = Math.sin(t * 2) * 0.35 * i;
+    head.scale.setScalar(1 + Math.sin(t * 6) * 0.05 * i);
+  },
+  ecstasy: (t, i) => effects.mdma(t, i),
+  molly: (t, i) => effects.mdma(t, i),
+  caffeine: (t, i) => {
+    avatar.position.x = (Math.random() - 0.5) * 0.04 * i;
+    avatar.position.y = (Math.random() - 0.5) * 0.04 * i;
+    head.rotation.y = Math.sin(t * 9) * 0.28 * i;
+    body.scale.set(1 + Math.sin(t * 5) * 0.02 * i, 1, 1);
+  },
+  coffee: (t, i) => effects.caffeine(t, i),
+  cocaine: (t, i) => {
+    avatar.position.x = (Math.random() - 0.5) * 0.09 * i;
+    avatar.position.y = (Math.random() - 0.5) * 0.09 * i;
+    head.rotation.y = Math.sin(t * 13) * 0.45 * i;
+    skin.emissive.setRGB(0.35 * i, 0.06 * i, 0.06 * i);
+  },
+  coke: (t, i) => effects.cocaine(t, i),
+  weed: (t, i) => {
+    avatar.position.y = Math.sin(t * 0.6) * 0.18 * i - 0.18 * i;
+    avatar.rotation.z = Math.sin(t * 0.4) * 0.18 * i;
+    head.rotation.z = Math.sin(t * 0.5) * 0.22 * i;
+    head.rotation.x = 0.15 * i;
+    eyeMat.color.setRGB(0.1 + 0.8 * i, 0.05, 0.05);
+  },
+  cannabis: (t, i) => effects.weed(t, i),
+  marijuana: (t, i) => effects.weed(t, i),
+  alcohol: (t, i) => {
+    avatar.rotation.z = Math.sin(t * 1.2) * 0.28 * i;
+    avatar.position.x = Math.sin(t * 1.5) * 0.45 * i;
+    head.rotation.z = Math.sin(t * 0.8 + 1) * 0.22 * i;
+    skin.color.setHSL(0.02, 0.5, 0.65);
+  },
+  beer: (t, i) => effects.alcohol(t, i),
+  wine: (t, i) => effects.alcohol(t, i),
+  ketamine: (t, i) => {
+    const step = (v) => Math.round(v * 4) / 4;
+    avatar.position.x = step(Math.sin(t * 2)) * 0.6 * i;
+    avatar.position.y = step(Math.cos(t * 1.3)) * 0.4 * i;
+    head.scale.setScalar(1 + step(Math.sin(t * 3)) * 0.25 * i);
+    avatar.rotation.y = step(t * 2) * 0.4;
+    skin.color.setHSL(0.6, 0.1, 0.55);
+  },
+  k: (t, i) => effects.ketamine(t, i),
+  meth: (t, i) => {
+    avatar.position.x = (Math.random() - 0.5) * 0.14 * i;
+    avatar.position.y = (Math.random() - 0.5) * 0.14 * i;
+    head.scale.setScalar(1 + Math.sin(t * 18) * 0.12 * i);
+    skin.emissive.setRGB(0.45 * i, 0.22 * i, 0);
+    head.rotation.y = Math.sin(t * 20) * 0.3 * i;
+  },
+  heroin: (t, i) => {
+    avatar.position.y = -0.55 * i;
+    avatar.rotation.z = 0.22 * i;
+    head.rotation.x = 0.45 * i;
+    head.rotation.z = -0.15 * i;
+    skin.color.setHSL(0.6, 0.05, 0.6 - 0.25 * i);
+  },
+  opioid: (t, i) => effects.heroin(t, i),
+  nicotine: (t, i) => {
+    avatar.position.y = Math.sin(t * 4) * 0.02 * i;
+    head.rotation.y = Math.sin(t * 0.5) * 0.12 * i;
+    skin.emissive.setRGB(0.05 * i, 0.05 * i, 0.05 * i);
+  },
+  adderall: (t, i) => {
+    avatar.position.x = Math.sin(t * 6) * 0.05 * i;
+    head.rotation.y = Math.sin(t * 4) * 0.18 * i;
+    skin.emissive.setRGB(0.2 * i, 0.15 * i, 0.05 * i);
+  },
+  unknown: (t, i) => {
+    head.rotation.y = Math.sin(t * 2.5) * 0.4 * i;
+    avatar.position.y = Math.sin(t * 3) * 0.06 * i;
+    avatar.rotation.z = Math.sin(t * 1.7) * 0.1 * i;
+    skin.color.setHSL((t * 0.5) % 1, 0.3, 0.5);
+  },
+};
+
+const state = {
+  mode: 'sober',
+  label: '',
+  startTime: 0,
+  duration: 0,
+  tripMode: 0,
+};
+
+const drugInput = document.getElementById('drug');
+const ingestBtn = document.getElementById('ingest');
+const statusEl = document.getElementById('status');
+const barEl = document.getElementById('bar');
+
+function ingest(rawName) {
+  const name = rawName.trim();
+  if (!name) return;
+  const key = name.toLowerCase();
+  const known = drugs[key];
+  const cfg = known || drugs.unknown;
+  state.mode = known ? key : 'unknown';
+  state.label = name.toUpperCase();
+  state.startTime = performance.now() / 1000;
+  state.duration = cfg.duration;
+  state.tripMode = cfg.tripMode || 0;
+  tripMat.uniforms.uMode.value = state.tripMode;
+  statusEl.textContent = `ON ${state.label}`;
+}
+
+ingestBtn.addEventListener('click', () => ingest(drugInput.value));
+drugInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') ingest(drugInput.value);
+});
+
+function resize() {
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+requestAnimationFrame(resize);
+
+function tick() {
+  requestAnimationFrame(tick);
+  const t = performance.now() / 1000;
+  const elapsed = state.mode !== 'sober' ? t - state.startTime : 0;
+  const progress = state.duration ? Math.min(elapsed / state.duration, 1) : 0;
+  const ramp = progress < 0.2 ? progress / 0.2 : 1 - (progress - 0.2) / 0.8;
+  const intensity = Math.max(0, ramp);
+
+  head.position.set(0, 2, 0);
+  body.position.set(0, 0.5, 0);
+  head.scale.set(1, 1, 1);
+  body.scale.set(1, 1, 1);
+  head.rotation.set(0, 0, 0);
+  avatar.rotation.set(0, 0, 0);
+  avatar.position.set(0, 0, 0);
+  skin.color.setHex(0xeeeeee);
+  skin.emissive.setHex(0x000000);
+  eyeMat.color.setHex(0x111111);
+
+  const idle = Math.sin(t * 1.2) * 0.015;
+  body.scale.set(1 + idle, 1 - idle * 0.3, 1 + idle);
+  head.position.y = 2 + idle * 0.4;
+
+  tripMat.uniforms.uTime.value = t;
+  tripMat.uniforms.uIntensity.value = state.tripMode ? intensity * 0.9 : 0;
+
+  const effect = effects[state.mode];
+  if (effect && intensity > 0) effect(t, intensity);
+
+  barEl.style.width = `${progress * 100}%`;
+
+  if (progress >= 1 && state.mode !== 'sober') {
+    state.mode = 'sober';
+    state.tripMode = 0;
+    tripMat.uniforms.uMode.value = 0;
+    statusEl.textContent = 'SOBER';
+  }
+
+  renderer.render(scene, camera);
+}
+tick();
+</script>
+</body>
+</html>
