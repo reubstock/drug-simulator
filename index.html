@@ -62,7 +62,7 @@
   }
   input::placeholder { color: var(--muted); }
   input:focus { border-bottom-color: var(--accent); }
-  button {
+  #ingest {
     background: var(--accent);
     color: var(--bg);
     border: none;
@@ -75,9 +75,45 @@
     align-self: flex-start;
     transition: transform 0.1s, background 0.2s;
   }
-  button:hover { background: var(--fg); }
-  button:active { transform: translateY(2px); }
-  button:disabled { opacity: 0.35; cursor: not-allowed; }
+  #ingest:hover { background: var(--fg); }
+  #ingest:active { transform: translateY(2px); }
+  #ingest:disabled { opacity: 0.35; cursor: not-allowed; }
+  .menu {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 4px;
+    max-width: 560px;
+  }
+  .menu-label {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+  .menu-item {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 4px 0;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .menu-item:hover {
+    color: var(--fg);
+    border-bottom-color: var(--accent);
+  }
+  .menu-item.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
   .stage { position: relative; background: #050505; }
   canvas { display: block; width: 100%; height: 100%; }
   .hud {
@@ -120,6 +156,9 @@
     <div class="controls">
       <input id="drug" type="text" placeholder="LSD" autocomplete="off" spellcheck="false" />
       <button id="ingest">INGEST</button>
+      <div class="menu" id="menu">
+        <span class="menu-label">MENU /</span>
+      </div>
     </div>
   </section>
   <section class="stage">
@@ -412,12 +451,47 @@ function ingest(rawName) {
   state.tripMode = cfg.tripMode || 0;
   tripMat.uniforms.uMode.value = state.tripMode;
   statusEl.textContent = `ON ${state.label}`;
+  setActiveMenu(state.mode);
 }
 
 ingestBtn.addEventListener('click', () => ingest(drugInput.value));
 drugInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') ingest(drugInput.value);
 });
+
+const menuItems = [
+  { label: 'LSD', key: 'lsd' },
+  { label: 'MUSHROOMS', key: 'mushrooms' },
+  { label: 'DMT', key: 'dmt' },
+  { label: 'MDMA', key: 'mdma' },
+  { label: 'KETAMINE', key: 'ketamine' },
+  { label: 'WEED', key: 'weed' },
+  { label: 'ALCOHOL', key: 'alcohol' },
+  { label: 'CAFFEINE', key: 'caffeine' },
+  { label: 'NICOTINE', key: 'nicotine' },
+  { label: 'ADDERALL', key: 'adderall' },
+  { label: 'COCAINE', key: 'cocaine' },
+  { label: 'METH', key: 'meth' },
+  { label: 'HEROIN', key: 'heroin' },
+];
+const menuEl = document.getElementById('menu');
+const menuButtons = new Map();
+menuItems.forEach(({ label, key }) => {
+  const btn = document.createElement('button');
+  btn.className = 'menu-item';
+  btn.textContent = label;
+  btn.dataset.key = key;
+  btn.addEventListener('click', () => {
+    drugInput.value = label;
+    ingest(label);
+  });
+  menuEl.appendChild(btn);
+  menuButtons.set(key, btn);
+});
+
+function setActiveMenu(key) {
+  menuButtons.forEach((btn, k) => btn.classList.toggle('active', k === key));
+}
 
 function resize() {
   const w = canvas.clientWidth;
@@ -466,6 +540,7 @@ function tick() {
     state.tripMode = 0;
     tripMat.uniforms.uMode.value = 0;
     statusEl.textContent = 'SOBER';
+    setActiveMenu(null);
   }
 
   renderer.render(scene, camera);
