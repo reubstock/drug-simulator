@@ -691,8 +691,8 @@ const drugs = {
   ketamine:   { duration: 34 },
   k:          { duration: 34 },
   meth:       { duration: 18 },
-  heroin:     { duration: 20 },
-  opioid:     { duration: 20 },
+  heroin:     { duration: 45 },
+  opioid:     { duration: 45 },
   nicotine:   { duration: 8 },
   adderall:   { duration: 14 },
   unknown:    { duration: 12 },
@@ -925,11 +925,66 @@ const effects = {
     head.rotation.y = Math.sin(t * 20) * 0.3 * i;
   },
   heroin: (t, i) => {
-    avatar.position.y = -0.55 * i;
-    avatar.rotation.z = 0.22 * i;
-    head.rotation.x = 0.45 * i;
-    head.rotation.z = -0.15 * i;
-    skin.color.setHSL(0.6, 0.05, 0.6 - 0.25 * i);
+    const elapsed = Math.max(0, t - state.startTime);
+    const cycleLen = 45;
+    const phase = (elapsed % cycleLen) / cycleLen;
+    if (phase < 0.15) {
+      // standing slump — drowsy sway
+      const p = phase / 0.15;
+      avatar.position.y = -0.1 * p;
+      avatar.rotation.z = Math.sin(t * 0.3) * 0.12 * (1 - p) + 0.06 * p;
+      head.rotation.x = 0.2 + p * 0.2;
+      head.rotation.z = -0.08 * p;
+      skin.color.setHSL(0.6, 0.05, 0.55);
+    } else if (phase < 0.4) {
+      // knees buckle — slow collapse
+      const p = (phase - 0.15) / 0.25;
+      const ease = p * p * (3 - 2 * p);
+      avatar.position.y = -0.1 - ease * 0.32;
+      avatar.scale.y = 1 - ease * 0.3;
+      avatar.rotation.x = ease * 0.45;
+      avatar.rotation.z = 0.06 + Math.sin(t * 0.25) * 0.08 * (1 - ease);
+      head.rotation.x = 0.4 + ease * 0.35;
+      head.rotation.z = -0.08;
+      skin.color.setHSL(0.6, 0.04, 0.55 - ease * 0.08);
+    } else if (phase < 0.6) {
+      // tip all the way over — lying on the floor
+      const p = (phase - 0.4) / 0.2;
+      const ease = p * p * (3 - 2 * p);
+      avatar.position.y = -0.42 - ease * 0.1;
+      avatar.rotation.x = 0.45 + ease * 0.85;
+      avatar.scale.y = 0.7;
+      avatar.scale.x = 1 + ease * 0.2;
+      avatar.scale.z = 1 + ease * 0.2;
+      avatar.rotation.z = 0.06;
+      head.rotation.x = 0.75 + ease * 0.15;
+      skin.color.setHSL(0.6, 0.03, 0.47 - ease * 0.05);
+    } else if (phase < 0.88) {
+      // melt into the floor — puddle spreading
+      const p = (phase - 0.6) / 0.28;
+      const ease = p * p;
+      avatar.position.y = -0.55 - ease * 0.04;
+      avatar.rotation.x = 1.3;
+      avatar.scale.y = 0.7 - ease * 0.55;
+      avatar.scale.x = 1.2 + ease * 0.6;
+      avatar.scale.z = 1.2 + ease * 0.6;
+      head.rotation.x = 0.9;
+      head.scale.setScalar(1 - ease * 0.5);
+      skin.color.setHSL(0.6, 0.02, 0.42 - ease * 0.22);
+    } else {
+      // disappear
+      const p = (phase - 0.88) / 0.12;
+      const ease = 1 - Math.pow(1 - p, 3);
+      avatar.position.y = -0.59;
+      avatar.rotation.x = 1.3;
+      avatar.scale.x = 1.8 * (1 - ease);
+      avatar.scale.y = 0.15 * (1 - ease);
+      avatar.scale.z = 1.8 * (1 - ease);
+      head.scale.setScalar(0.5 * (1 - ease));
+      skin.color.setHSL(0.6, 0.02, 0.2);
+    }
+    leftEye.visible = phase < 0.2;
+    rightEye.visible = phase < 0.2;
   },
   opioid: (t, i) => effects.heroin(t, i),
   nicotine: (t, i) => {
