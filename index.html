@@ -753,9 +753,9 @@ function ingest(rawName) {
   loadTrack(state.mode);
 }
 
-ingestBtn.addEventListener('click', () => ingest(drugInput.value));
+ingestBtn.addEventListener('click', () => ingest(drugInput.value || drugInput.placeholder));
 drugInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') ingest(drugInput.value);
+  if (e.key === 'Enter') ingest(drugInput.value || drugInput.placeholder);
 });
 
 const menuEl = document.getElementById('menu');
