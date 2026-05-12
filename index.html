@@ -25,6 +25,7 @@
   main {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto;
     height: 100vh;
   }
   .panel {
@@ -114,38 +115,216 @@
     color: var(--accent);
     border-bottom-color: var(--accent);
   }
-  .stage { position: relative; background: #050505; }
+  .stage { position: relative; background: #050505; overflow: hidden; }
   canvas { display: block; width: 100%; height: 100%; }
-  .hud {
-    position: absolute;
-    bottom: 28px;
-    left: 28px;
-    right: 28px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    font-size: 12px;
-    letter-spacing: 0.25em;
-    text-transform: uppercase;
-    color: var(--muted);
-    pointer-events: none;
+  .player {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(220px, 1.4fr) 2fr auto;
+    align-items: center;
+    gap: 24px;
+    padding: 12px 28px;
+    background: #050505;
+    border-top: 1px solid #161616;
+    height: 76px;
   }
-  .hud .status { color: var(--fg); }
+  .player-track {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+  .player-art {
+    width: 48px;
+    height: 48px;
+    background: #1a1a1a;
+    flex-shrink: 0;
+    object-fit: cover;
+  }
+  .player-art[src=""] { display: block; }
+  .player-meta { min-width: 0; }
+  .player-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 2px;
+  }
+  .player-artist {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .player-progress {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+  .status {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--fg);
+    white-space: nowrap;
+  }
   .bar {
-    width: 160px; height: 3px;
-    background: rgba(255,255,255,0.1);
+    flex: 1;
+    height: 3px;
+    background: rgba(255,255,255,0.08);
     overflow: hidden;
   }
   .bar > i {
-    display: block; height: 100%;
+    display: block;
+    height: 100%;
     background: var(--accent);
     width: 0%;
     transition: width 0.15s linear;
   }
+  .player-play {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+    transition: background 0.2s, transform 0.1s;
+  }
+  .player-play:hover { background: var(--fg); }
+  .player-play:active { transform: scale(0.95); }
+  .player-play:disabled { opacity: 0.3; cursor: not-allowed; }
+  #invent {
+    background: transparent;
+    border: 1px dashed var(--muted);
+    color: var(--fg);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-top: 4px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  #invent:hover { border-color: var(--accent); color: var(--accent); }
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+  .modal.open { display: flex; }
+  .modal-card {
+    background: var(--bg);
+    border: 1px solid #222;
+    padding: 32px;
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .modal-card h2 {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+  .modal-card label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .modal-card input,
+  .modal-card select,
+  .modal-card textarea {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--muted);
+    color: var(--fg);
+    font-size: 16px;
+    font-weight: 700;
+    padding: 8px 0;
+    font-family: inherit;
+    outline: none;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .modal-card textarea {
+    resize: none;
+    min-height: 56px;
+    text-transform: none;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .modal-card input:focus,
+  .modal-card select:focus,
+  .modal-card textarea:focus {
+    border-bottom-color: var(--accent);
+  }
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+  .modal-actions button {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--muted);
+    padding: 12px 22px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.2s;
+  }
+  .modal-actions .primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+  .modal-actions button:hover { border-color: var(--fg); }
+  .modal-actions .primary:hover { background: var(--fg); }
+  .modal-status {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    min-height: 14px;
+  }
+  .modal-status.error { color: var(--accent); }
   @media (max-width: 820px) {
-    main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-    .panel { padding: 4vh 6vw; }
+    main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+    .panel { padding: 4vh 6vw; gap: 24px; }
     h1 { font-size: 22vw; }
+    .player { height: auto; padding: 10px 18px; grid-template-columns: 1fr auto; gap: 14px; }
+    .player-progress { display: none; }
   }
 </style>
 </head>
@@ -159,16 +338,68 @@
       <div class="menu" id="menu">
         <span class="menu-label">MENU /</span>
       </div>
+      <button id="invent" type="button">+ INVENT DRUG</button>
     </div>
   </section>
   <section class="stage">
     <canvas id="c"></canvas>
-    <div class="hud">
+  </section>
+  <footer class="player">
+    <div class="player-track">
+      <img class="player-art" id="player-art" alt="" />
+      <div class="player-meta">
+        <div class="player-title" id="player-title">—</div>
+        <div class="player-artist" id="player-artist">No track</div>
+      </div>
+    </div>
+    <div class="player-progress">
       <div class="status" id="status">SOBER</div>
       <div class="bar"><i id="bar"></i></div>
     </div>
-  </section>
+    <button class="player-play" id="player-play" aria-label="Play/pause" disabled>▶</button>
+  </footer>
 </main>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <h2>INVENT DRUG</h2>
+    <label>
+      NAME
+      <input id="m-name" type="text" placeholder="MOONDUST" maxlength="24" autocomplete="off" spellcheck="false" />
+    </label>
+    <label>
+      EFFECTS
+      <textarea id="m-desc" placeholder="Describe what it feels like…" maxlength="200"></textarea>
+    </label>
+    <label>
+      VIBE
+      <select id="m-vibe">
+        <option value="lsd">PSYCHEDELIC</option>
+        <option value="mushrooms">GLOWING / BREATHING</option>
+        <option value="dmt">GEOMETRIC RUSH</option>
+        <option value="mdma">EUPHORIC / FLOATING</option>
+        <option value="ketamine">FRAGMENTED / DETACHED</option>
+        <option value="weed">DROOPY / SLOW</option>
+        <option value="alcohol">WOBBLY / DRUNK</option>
+        <option value="caffeine">JITTERY</option>
+        <option value="cocaine">RED-FLUSH JITTER</option>
+        <option value="meth">VIOLENT / MANIC</option>
+        <option value="heroin">SLUMPED / NUMB</option>
+        <option value="adderall">FOCUSED PULSE</option>
+        <option value="unknown">CONFUSED / RANDOM</option>
+      </select>
+    </label>
+    <label>
+      THEME SONG
+      <input id="m-song" type="text" placeholder="ARTIST — SONG TITLE" autocomplete="off" />
+    </label>
+    <div class="modal-status" id="m-status"></div>
+    <div class="modal-actions">
+      <button type="button" id="m-cancel">CANCEL</button>
+      <button type="button" id="m-submit" class="primary">CREATE</button>
+    </div>
+  </div>
+</div>
 
 <script type="importmap">
 {
@@ -425,6 +656,34 @@ const effects = {
   },
 };
 
+const tracks = {
+  lsd:        { title: 'White Rabbit',           artist: 'Jefferson Airplane',         preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9d/7f/c6/9d7fc652-907c-b040-3ee0-07de78b6e064/mzaf_5136406247672899456.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5c/bd/17/5cbd17d6-ceea-e185-e889-ee494cc650da/828765035125.jpg/100x100bb.jpg' },
+  mushrooms:  { title: 'Tomorrow Never Knows',   artist: 'The Beatles',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/c8/f8/b7/c8f8b737-1697-de3a-5345-571e0a9722cc/mzaf_9296497573197633805.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/58/4a/10/584a1058-de0a-6a6b-d0bd-da09a028b8bc/00602567705499.rgb.jpg/100x100bb.jpg' },
+  dmt:        { title: 'Astronomy Domine',       artist: 'Pink Floyd',                  preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/4f/91/c0/4f91c072-5a27-3737-8aae-491196ef4572/mzaf_13281052479360747595.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e7/b4/d3/e7b4d3e0-66d5-0cea-4054-47f3e8bae778/886445635799.jpg/100x100bb.jpg' },
+  mdma:       { title: 'Strobe',                 artist: 'deadmau5',                    preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/92/1b/11921b51-1ed8-ecf1-cb92-41c7af1e2942/mzaf_7176793560074956543.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f7/24/19/f724197c-b6b7-b2ad-94a9-06b2f5f95455/617465226458.jpg/100x100bb.jpg' },
+  ketamine:   { title: 'Special K',              artist: 'Placebo',                     preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/17/fa/b1/17fab1a0-f841-54ea-3ec6-da5d9ef1c486/mzaf_1824000296061238563.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ea/da/94/eada945f-eb00-37f7-c8a0-a1cb065b7fcd/5060186926865.jpg/100x100bb.jpg' },
+  weed:       { title: 'Hits from the Bong',     artist: 'Cypress Hill',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/ab/82/b6/ab82b656-7aa0-cc47-da86-d1d8396df497/mzaf_13416743610567391960.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/63/01/43/63014383-c3f0-d31d-46a7-5cecb3dece1d/074645729626.jpg/100x100bb.jpg' },
+  alcohol:    { title: 'Tubthumping',            artist: 'Chumbawamba',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/b6/d2/ac/b6d2ac02-2784-81f6-d763-08e0b2be1dfe/mzaf_12670863909406805270.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/e0/a1/ef/e0a1ef4a-6aa6-f614-6351-05a348fd4b56/13UABIM57031.rgb.jpg/100x100bb.jpg' },
+  caffeine:   { title: 'Coffee',                 artist: 'Sylvan Esso',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/87/4c/25/874c250d-cdf0-3b39-4075-ba93d3eb593c/mzaf_6567645334714689999.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/66/f6/8d/66f68d8d-8245-1d35-3b6a-86f169d0670b/0195893057733.jpg/100x100bb.jpg' },
+  nicotine:   { title: 'Cigarette Daydreams',    artist: 'Cage the Elephant',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/06/02/88/060288d9-8d59-f2de-b03e-dd3ec84ae23a/mzaf_16545072701979127359.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/02/d2/e2/02d2e290-82c9-bcf4-73fa-4cd06f65f4b9/886444143073.jpg/100x100bb.jpg' },
+  adderall:   { title: 'Stressed Out',           artist: 'twenty one pilots',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/a9/74/e8/a974e8f2-0693-9371-bb6c-87047a486254/mzaf_1898989387861959316.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/8e/e2/89/8ee28904-0821-610d-5011-a61845f62756/075679926951.jpg/100x100bb.jpg' },
+  cocaine:    { title: 'Cocaine',                artist: 'Eric Clapton',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/bc/4c/05/bc4c05fe-7981-d4bb-1a88-7439b510e609/mzaf_13253847105565151631.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e6/8b/8e/e68b8eb1-ddce-3332-4e66-5a15ccc04d6f/00600753407301.rgb.jpg/100x100bb.jpg' },
+  meth:       { title: 'Methamphetamine Blues',  artist: 'Mark Lanegan',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/64/6d/b6/646db6ec-add5-b96d-2689-5a714cadccd8/mzaf_9952697079338265904.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/5c/b6/e7/5cb6e780-4d29-3460-932f-1bf60f3cbd85/607618023782.png/100x100bb.jpg' },
+  heroin:     { title: 'Heroin',                 artist: 'The Velvet Underground & Nico', preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/e8/f6/81/e8f68107-4f6b-1e30-f7e3-9c1d5be3a43b/mzaf_9170318277739876681.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/92/93/39/9293397f-a707-237e-ec7e-0ca613a67e3c/06UMGIM04143.rgb.jpg/100x100bb.jpg' },
+};
+const aliasGroups = [
+  ['lsd', 'acid'],
+  ['mushrooms', 'shrooms', 'psilocybin'],
+  ['mdma', 'ecstasy', 'molly'],
+  ['ketamine', 'k'],
+  ['caffeine', 'coffee'],
+  ['cocaine', 'coke'],
+  ['weed', 'cannabis', 'marijuana'],
+  ['alcohol', 'beer', 'wine'],
+  ['heroin', 'opioid'],
+];
+aliasGroups.forEach(([canon, ...rest]) => rest.forEach(k => { if (tracks[canon]) tracks[k] = tracks[canon]; }));
+
 const state = {
   mode: 'sober',
   label: '',
@@ -437,6 +696,45 @@ const drugInput = document.getElementById('drug');
 const ingestBtn = document.getElementById('ingest');
 const statusEl = document.getElementById('status');
 const barEl = document.getElementById('bar');
+const titleEl = document.getElementById('player-title');
+const artistEl = document.getElementById('player-artist');
+const artEl = document.getElementById('player-art');
+const playBtn = document.getElementById('player-play');
+
+const audio = new Audio();
+audio.preload = 'none';
+audio.volume = 0.7;
+playBtn.addEventListener('click', () => {
+  if (!audio.src) return;
+  if (audio.paused) audio.play().catch(() => {});
+  else audio.pause();
+});
+audio.addEventListener('play', () => { playBtn.textContent = '⏸'; });
+audio.addEventListener('pause', () => { playBtn.textContent = '▶'; });
+audio.addEventListener('ended', () => { playBtn.textContent = '▶'; });
+
+function loadTrack(key) {
+  const t = tracks[key];
+  if (!t || !t.preview) { clearTrack(); return; }
+  titleEl.textContent = t.title;
+  artistEl.textContent = t.artist;
+  if (t.art) artEl.src = t.art;
+  else artEl.removeAttribute('src');
+  audio.src = t.preview;
+  audio.currentTime = 0;
+  playBtn.disabled = false;
+  audio.play().catch(() => {});
+}
+function clearTrack() {
+  audio.pause();
+  audio.removeAttribute('src');
+  audio.load();
+  titleEl.textContent = '—';
+  artistEl.textContent = 'No track';
+  artEl.removeAttribute('src');
+  playBtn.disabled = true;
+  playBtn.textContent = '▶';
+}
 
 function ingest(rawName) {
   const name = rawName.trim();
@@ -452,6 +750,7 @@ function ingest(rawName) {
   tripMat.uniforms.uMode.value = state.tripMode;
   statusEl.textContent = `ON ${state.label}`;
   setActiveMenu(state.mode);
+  loadTrack(state.mode);
 }
 
 ingestBtn.addEventListener('click', () => ingest(drugInput.value));
@@ -459,24 +758,9 @@ drugInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') ingest(drugInput.value);
 });
 
-const menuItems = [
-  { label: 'LSD', key: 'lsd' },
-  { label: 'MUSHROOMS', key: 'mushrooms' },
-  { label: 'DMT', key: 'dmt' },
-  { label: 'MDMA', key: 'mdma' },
-  { label: 'KETAMINE', key: 'ketamine' },
-  { label: 'WEED', key: 'weed' },
-  { label: 'ALCOHOL', key: 'alcohol' },
-  { label: 'CAFFEINE', key: 'caffeine' },
-  { label: 'NICOTINE', key: 'nicotine' },
-  { label: 'ADDERALL', key: 'adderall' },
-  { label: 'COCAINE', key: 'cocaine' },
-  { label: 'METH', key: 'meth' },
-  { label: 'HEROIN', key: 'heroin' },
-];
 const menuEl = document.getElementById('menu');
 const menuButtons = new Map();
-menuItems.forEach(({ label, key }) => {
+function addMenuChip(label, key) {
   const btn = document.createElement('button');
   btn.className = 'menu-item';
   btn.textContent = label;
@@ -487,11 +771,97 @@ menuItems.forEach(({ label, key }) => {
   });
   menuEl.appendChild(btn);
   menuButtons.set(key, btn);
-});
+}
+
+const menuItems = [
+  ['LSD', 'lsd'], ['MUSHROOMS', 'mushrooms'], ['DMT', 'dmt'], ['MDMA', 'mdma'],
+  ['KETAMINE', 'ketamine'], ['WEED', 'weed'], ['ALCOHOL', 'alcohol'], ['CAFFEINE', 'caffeine'],
+  ['NICOTINE', 'nicotine'], ['ADDERALL', 'adderall'], ['COCAINE', 'cocaine'],
+  ['METH', 'meth'], ['HEROIN', 'heroin'],
+];
+menuItems.forEach(([label, key]) => addMenuChip(label, key));
 
 function setActiveMenu(key) {
   menuButtons.forEach((btn, k) => btn.classList.toggle('active', k === key));
 }
+
+// Invent drug modal
+const modal = document.getElementById('modal');
+const inventBtn = document.getElementById('invent');
+const mName = document.getElementById('m-name');
+const mDesc = document.getElementById('m-desc');
+const mVibe = document.getElementById('m-vibe');
+const mSong = document.getElementById('m-song');
+const mStatus = document.getElementById('m-status');
+const mSubmit = document.getElementById('m-submit');
+const mCancel = document.getElementById('m-cancel');
+
+function openModal() {
+  modal.classList.add('open');
+  mStatus.textContent = '';
+  mStatus.classList.remove('error');
+  setTimeout(() => mName.focus(), 50);
+}
+function closeModal() { modal.classList.remove('open'); }
+
+inventBtn.addEventListener('click', openModal);
+mCancel.addEventListener('click', closeModal);
+modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+});
+
+async function searchITunes(q) {
+  try {
+    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1&country=us`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const r = data.results && data.results[0];
+    if (!r || !r.previewUrl) return null;
+    return { title: r.trackName, artist: r.artistName, preview: r.previewUrl, art: r.artworkUrl100 };
+  } catch { return null; }
+}
+
+mSubmit.addEventListener('click', async () => {
+  const name = mName.value.trim();
+  if (!name) {
+    mStatus.textContent = 'NAME REQUIRED';
+    mStatus.classList.add('error');
+    return;
+  }
+  mStatus.classList.remove('error');
+  const songQuery = mSong.value.trim();
+  let track = null;
+  if (songQuery) {
+    mStatus.textContent = 'SEARCHING SONG…';
+    mSubmit.disabled = true;
+    track = await searchITunes(songQuery);
+    mSubmit.disabled = false;
+    if (!track) {
+      mStatus.textContent = 'SONG NOT FOUND — CREATING WITHOUT';
+      mStatus.classList.add('error');
+    }
+  }
+  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+  if (!key) {
+    mStatus.textContent = 'INVALID NAME';
+    mStatus.classList.add('error');
+    return;
+  }
+  const vibeKey = mVibe.value;
+  const vibeCfg = drugs[vibeKey] || drugs.unknown;
+  drugs[key] = { duration: vibeCfg.duration, tripMode: vibeCfg.tripMode };
+  effects[key] = effects[vibeKey] || effects.unknown;
+  if (track) tracks[key] = track;
+  if (!menuButtons.has(key)) addMenuChip(name.toUpperCase(), key);
+  closeModal();
+  mName.value = '';
+  mDesc.value = '';
+  mSong.value = '';
+  mStatus.textContent = '';
+  drugInput.value = name;
+  ingest(name);
+});
 
 function resize() {
   const w = canvas.clientWidth;
@@ -541,6 +911,7 @@ function tick() {
     tripMat.uniforms.uMode.value = 0;
     statusEl.textContent = 'SOBER';
     setActiveMenu(null);
+    clearTrack();
   }
 
   renderer.render(scene, camera);
