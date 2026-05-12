@@ -240,6 +240,8 @@
     padding: 32px;
     width: 100%;
     max-width: 520px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -365,10 +367,72 @@
   .modal-status.error { color: var(--accent); }
   @media (max-width: 820px) {
     main { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
-    .panel { padding: 4vh 6vw; gap: 24px; }
-    h1 { font-size: 22vw; }
-    .player { height: auto; padding: 10px 18px; grid-template-columns: 1fr auto; gap: 14px; }
+    .panel { padding: 18px 18px 14px; gap: 14px; }
+    h1 { font-size: clamp(56px, 14vw, 96px); }
+    .controls { gap: 14px; max-width: 100%; }
+    input {
+      font-size: 22px;
+      padding: 10px 0;
+    }
+    #ingest {
+      width: 100%;
+      text-align: center;
+      align-self: stretch;
+      padding: 16px 18px;
+      font-size: 16px;
+      letter-spacing: 0.2em;
+    }
+    #invent {
+      width: 100%;
+      text-align: center;
+      align-self: stretch;
+      padding: 12px 14px;
+      margin-top: 0;
+    }
+    .menu {
+      gap: 8px 14px;
+      margin-top: 0;
+      max-width: 100%;
+    }
+    .menu-item { padding: 6px 0; min-height: 28px; }
+    .stage { min-height: 220px; }
+    .player {
+      height: auto;
+      padding: 8px 14px;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
     .player-progress { display: none; }
+    .player-art { width: 40px; height: 40px; }
+    .player-title { font-size: 13px; }
+    .player-artist { font-size: 10px; }
+    .player-play { width: 40px; height: 40px; font-size: 12px; }
+    .modal { padding: 12px; }
+    .modal-card {
+      padding: 22px;
+      gap: 16px;
+      max-height: calc(100vh - 24px);
+    }
+    .modal-card h2 { font-size: 22px; }
+    .modal-card input[type="range"]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      margin-top: -9px;
+    }
+    .modal-card input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+    }
+    .modal-actions button { padding: 14px 18px; flex: 1; }
+  }
+  @media (max-width: 480px) {
+    .panel { padding: 14px 14px 10px; gap: 10px; }
+    h1 { font-size: clamp(52px, 16vw, 72px); }
+    input { font-size: 20px; padding: 8px 0; }
+    .menu-label { font-size: 10px; letter-spacing: 0.25em; }
+    .menu-item { font-size: 11px; }
+    .stage { min-height: 180px; }
+    .modal-row { grid-template-columns: 1fr; gap: 14px; }
   }
 </style>
 </head>
