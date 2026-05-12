@@ -993,9 +993,45 @@ const effects = {
     skin.emissive.setRGB(0.05 * i, 0.05 * i, 0.05 * i);
   },
   adderall: (t, i) => {
-    avatar.position.x = Math.sin(t * 6) * 0.05 * i;
-    head.rotation.y = Math.sin(t * 4) * 0.18 * i;
-    skin.emissive.setRGB(0.2 * i, 0.15 * i, 0.05 * i);
+    const elapsed = Math.max(0, t - state.startTime);
+    const cycleLen = 14;
+    const phase = (elapsed % cycleLen) / cycleLen;
+    if (phase < 0.6) {
+      // FIDGETY — jumpy, can't sit still
+      avatar.position.x = (Math.random() - 0.5) * 0.2 + Math.sin(t * 9) * 0.08;
+      avatar.position.y = Math.abs(Math.sin(t * 11)) * 0.14 + (Math.random() - 0.5) * 0.06;
+      avatar.position.z = (Math.random() - 0.5) * 0.06;
+      head.rotation.y = Math.sin(t * 13) * 0.5 + (Math.random() - 0.5) * 0.18;
+      head.rotation.x = Math.sin(t * 9) * 0.22;
+      head.rotation.z = (Math.random() - 0.5) * 0.2;
+      body.scale.set(1 + Math.sin(t * 14) * 0.07, 1 + Math.sin(t * 16) * 0.05, 1);
+      skin.emissive.setRGB(0.25, 0.18, 0.05);
+      leftEye.visible = Math.random() > 0.04;
+      rightEye.visible = Math.random() > 0.04;
+    } else if (phase < 0.78) {
+      // winding down — fidgets bleed out as focus locks in
+      const p = (phase - 0.6) / 0.18;
+      const ease = 1 - Math.pow(1 - p, 3);
+      const amp = 1 - ease;
+      avatar.position.x = Math.sin(t * 9) * 0.05 * amp + (Math.random() - 0.5) * 0.09 * amp;
+      avatar.position.y = Math.sin(t * 11) * 0.05 * amp;
+      head.rotation.y = Math.sin(t * 12) * 0.18 * amp;
+      head.rotation.x = Math.sin(t * 9) * 0.08 * amp;
+      skin.emissive.setRGB(0.25 - ease * 0.07, 0.18 - ease * 0.05, 0.05);
+    } else {
+      // SUPER FOCUS — locked in, eyes bulging
+      const p = (phase - 0.78) / 0.22;
+      const ease = 1 - Math.pow(1 - p, 4);
+      head.position.set(0, 2, 0);
+      body.scale.set(1, 1, 1);
+      const eyeBoost = 1 + ease * 1.8;
+      leftEye.scale.setScalar(eyeBoost);
+      rightEye.scale.setScalar(eyeBoost);
+      leftEye.position.set(-0.28 - ease * 0.03, 2.12, 0.78 + ease * 0.08);
+      rightEye.position.set(0.28 + ease * 0.03, 2.12, 0.78 + ease * 0.08);
+      eyeMat.color.setRGB(0.02, 0.02, 0.02);
+      skin.emissive.setRGB(0.18, 0.1, 0.02);
+    }
   },
   unknown: (t, i) => {
     head.rotation.y = Math.sin(t * 2.5) * 0.4 * i;
@@ -1343,6 +1379,10 @@ function tick() {
   avatar.scale.set(1, 1, 1);
   leftEye.visible = true;
   rightEye.visible = true;
+  leftEye.scale.set(1, 1, 1);
+  rightEye.scale.set(1, 1, 1);
+  leftEye.position.set(-0.28, 2.12, 0.78);
+  rightEye.position.set(0.28, 2.12, 0.78);
   skin.color.setHex(0xeeeeee);
   skin.emissive.setHex(0x000000);
   eyeMat.color.setHex(0x111111);
