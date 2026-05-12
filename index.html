@@ -688,8 +688,8 @@ const drugs = {
   alcohol:    { duration: 18 },
   beer:       { duration: 18 },
   wine:       { duration: 18 },
-  ketamine:   { duration: 16 },
-  k:          { duration: 16 },
+  ketamine:   { duration: 34 },
+  k:          { duration: 34 },
   meth:       { duration: 18 },
   heroin:     { duration: 20 },
   opioid:     { duration: 20 },
@@ -862,30 +862,59 @@ const effects = {
   wine: (t, i) => effects.alcohol(t, i),
   ketamine: (t, i) => {
     const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 5.5;
+    const cycleLen = 30;
     const phase = (elapsed % cycleLen) / cycleLen;
-    if (phase < 0.55) {
-      // fold forward and shrink toward a vanishing point
-      const p = phase / 0.55;
+    skin.color.setHSL(0.6, 0.1, 0.55);
+    leftEye.visible = false;
+    rightEye.visible = false;
+    if (phase < 0.12) {
+      // K-hole onset — slow dazed wobble
+      const w = (phase / 0.12);
+      head.rotation.x = Math.sin(t * 0.6) * 0.25 + w * 0.2;
+      head.rotation.z = Math.sin(t * 0.5) * 0.18;
+      avatar.rotation.z = Math.sin(t * 0.35) * 0.14;
+      leftEye.visible = true;
+      rightEye.visible = true;
+    } else if (phase < 0.5) {
+      // slow bend-over — body folds forward, head inverts and starts the descent
+      const p = (phase - 0.12) / 0.38;
+      const ease = p * p * (3 - 2 * p);
+      body.rotation.x = ease * 0.95;
+      head.rotation.x = ease * Math.PI;
+      head.position.y = 2 - ease * 1.45;
+      head.position.z = ease * 0.18;
+      avatar.position.y = -ease * 0.12;
+    } else if (phase < 0.68) {
+      // head dives into his own ass
+      const p = (phase - 0.5) / 0.18;
       const ease = p * p;
-      avatar.rotation.x = ease * Math.PI;
-      avatar.position.y = -ease * 0.45;
-      const s = 1 - ease * 0.97;
-      avatar.scale.setScalar(Math.max(s, 0.03));
-    } else if (phase < 0.78) {
-      // gone
-      avatar.scale.setScalar(0.03);
-      avatar.rotation.x = Math.PI;
-      avatar.position.y = -0.45;
+      body.rotation.x = 0.95 + ease * 0.35;
+      head.rotation.x = Math.PI;
+      head.position.y = 0.55 - ease * 1.05;
+      head.position.z = 0.18 - ease * 0.32;
+      head.scale.setScalar(1 - ease * 0.88);
+      body.scale.setScalar(1 - ease * 0.18);
+      avatar.position.y = -0.12 - ease * 0.06;
+    } else if (phase < 0.88) {
+      // gone — vanished
+      avatar.scale.setScalar(0.02);
+      head.scale.setScalar(0.02);
+      avatar.position.y = -0.2;
     } else {
       // pop back upright
-      const p = (phase - 0.78) / 0.22;
+      const p = (phase - 0.88) / 0.12;
       const ease = 1 - Math.pow(1 - p, 4);
-      avatar.scale.setScalar(0.03 + ease * 0.97);
-      avatar.rotation.x = Math.PI * (1 - ease);
-      avatar.position.y = -0.45 * (1 - ease);
+      avatar.scale.setScalar(0.02 + ease * 0.98);
+      body.rotation.x = 1.3 * (1 - ease);
+      head.rotation.x = Math.PI * (1 - ease);
+      head.position.y = -0.5 + ease * 2.5;
+      head.position.z = -0.14 * (1 - ease);
+      head.scale.setScalar(0.12 + ease * 0.88);
+      body.scale.setScalar(0.82 + ease * 0.18);
+      avatar.position.y = -0.2 * (1 - ease);
+      leftEye.visible = ease > 0.85;
+      rightEye.visible = ease > 0.85;
     }
-    skin.color.setHSL(0.6, 0.1, 0.55);
   },
   k: (t, i) => effects.ketamine(t, i),
   meth: (t, i) => {
