@@ -3,538 +3,383 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>DRUG SIMULATOR</title>
+<title>BATTLE OF BELIEFS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;700;900&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Bebas+Neue&family=Special+Elite&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg: #0a0a0a;
-    --fg: #f4f4f4;
-    --accent: #ff5b1f;
-    --muted: #555;
+    --ink: #f7e9c9;
+    --paper: #fff7df;
+    --crimson: #c8102e;
+    --gold: #d6a737;
+    --shadow: rgba(0,0,0,0.55);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body {
     height: 100%;
     overflow: hidden;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: 'Geist', system-ui, -apple-system, sans-serif;
-  }
-  main {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr auto;
-    height: 100vh;
-  }
-  .panel {
-    padding: 6vh 5vw;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 40px;
-  }
-  h1 {
-    font-size: clamp(80px, 14vw, 240px);
-    font-weight: 900;
-    letter-spacing: -0.05em;
-    line-height: 0.82;
-  }
-  .controls {
-    display: flex;
-    flex-direction: column;
-    gap: 28px;
-    max-width: 560px;
-  }
-  input {
-    background: transparent;
-    border: none;
-    border-bottom: 2px solid var(--muted);
-    color: var(--fg);
-    font-size: clamp(28px, 4vw, 56px);
-    font-weight: 700;
-    padding: 12px 0;
-    font-family: inherit;
-    outline: none;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    transition: border-color 0.2s;
-  }
-  input::placeholder { color: var(--muted); }
-  input:focus { border-bottom-color: var(--accent); }
-  #ingest {
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    padding: 22px 36px;
-    font-size: clamp(20px, 2.2vw, 28px);
-    font-weight: 900;
-    letter-spacing: 0.14em;
-    cursor: pointer;
-    font-family: inherit;
-    align-self: flex-start;
-    transition: transform 0.1s, background 0.2s;
-  }
-  #ingest:hover { background: var(--fg); }
-  #ingest:active { transform: translateY(2px); }
-  #ingest:disabled { opacity: 0.35; cursor: not-allowed; }
-  .menu {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 14px;
-    margin-top: 4px;
-    max-width: 560px;
-  }
-  .menu-label {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--muted);
-    margin-right: 4px;
-  }
-  .menu-item {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid transparent;
-    color: var(--muted);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 4px 0;
-    cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
-  }
-  .menu-item:hover {
-    color: var(--fg);
-    border-bottom-color: var(--accent);
-  }
-  .menu-item.active {
-    color: var(--accent);
-    border-bottom-color: var(--accent);
-  }
-  .stage { position: relative; background: #050505; overflow: hidden; }
-  canvas { display: block; width: 100%; height: 100%; }
-  .player {
-    grid-column: 1 / -1;
-    display: grid;
-    grid-template-columns: minmax(220px, 1.4fr) 2fr auto;
-    align-items: center;
-    gap: 24px;
-    padding: 12px 28px;
     background: #050505;
-    border-top: 1px solid #161616;
-    height: 76px;
+    color: var(--ink);
+    font-family: 'Bebas Neue', system-ui, sans-serif;
+    user-select: none;
   }
-  .player-track {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    min-width: 0;
-  }
-  .player-art {
-    width: 48px;
-    height: 48px;
-    background: #1a1a1a;
-    flex-shrink: 0;
-    object-fit: cover;
-  }
-  .player-art[src=""] { display: block; }
-  .player-meta { min-width: 0; }
-  .player-title {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--fg);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 2px;
-  }
-  .player-artist {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .player-progress {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    min-width: 0;
-  }
-  .status {
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--fg);
-    white-space: nowrap;
-  }
-  .bar {
-    flex: 1;
-    height: 3px;
-    background: rgba(255,255,255,0.08);
-    overflow: hidden;
-  }
-  .bar > i {
+  canvas#stage {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
     display: block;
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.15s linear;
+    pointer-events: none; /* never block UI; 3D scene is presentational */
+    z-index: 1;
   }
-  .player-play {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    font-size: 14px;
-    font-weight: 900;
-    cursor: pointer;
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 22px 28px 14px;
+    z-index: 30;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
+    pointer-events: auto;
+  }
+  #title {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(34px, 5.2vw, 70px);
+    letter-spacing: 0.06em;
+    color: var(--gold);
+    text-shadow:
+      2px 2px 0 #6b0e1c,
+      4px 4px 0 #2a0509,
+      0 0 30px rgba(214,167,55,0.4);
+    line-height: 1;
+    text-align: center;
+  }
+  #title small {
+    display: block;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 0.22em;
+    letter-spacing: 0.5em;
+    color: #fff;
+    margin-top: 4px;
+    text-shadow: 1px 1px 0 #000;
+  }
+  #matchmake {
+    margin: 16px auto 0;
+    max-width: 1100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: inherit;
-    padding: 0;
-    transition: background 0.2s, transform 0.1s;
+    gap: 14px;
+    flex-wrap: wrap;
+    pointer-events: auto;
   }
-  .player-play:hover { background: var(--fg); }
-  .player-play:active { transform: scale(0.95); }
-  .player-play:disabled { opacity: 0.3; cursor: not-allowed; }
-  #invent {
-    background: transparent;
-    border: 1px dashed var(--muted);
-    color: var(--fg);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 7px 14px;
+  .mm-label {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(18px, 1.8vw, 26px);
+    letter-spacing: 0.12em;
+    color: var(--ink);
+    padding: 6px 12px;
+    background: var(--crimson);
+    border: 2px solid #ffd76b;
+    box-shadow: 3px 3px 0 #000;
+  }
+  select.fighter-pick {
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--paper);
+    color: #1a1a1a;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 1.7vw, 24px);
+    letter-spacing: 0.08em;
+    padding: 10px 38px 10px 16px;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000, inset 0 -3px 0 #d6c290;
     cursor: pointer;
-    align-self: flex-start;
-    margin-top: 4px;
-    transition: border-color 0.15s, color 0.15s;
+    min-width: 240px;
+    background-image: linear-gradient(45deg, transparent 50%, #000 50%), linear-gradient(135deg, #000 50%, transparent 50%);
+    background-position: calc(100% - 16px) 50%, calc(100% - 10px) 50%;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
   }
-  #invent:hover { border-color: var(--accent); color: var(--accent); }
-  .modal {
+  select.fighter-pick:focus { outline: 3px solid var(--gold); outline-offset: 2px; }
+  .vs-pill {
+    font-family: 'Bungee', sans-serif;
+    color: #fff;
+    background: #111;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 18px;
+    letter-spacing: 0.18em;
+    border: 2px solid var(--gold);
+  }
+  #ringbell {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(20px, 2vw, 28px);
+    letter-spacing: 0.14em;
+    background: var(--gold);
+    color: #1a0a02;
+    padding: 10px 24px 10px 18px;
+    border: 3px solid #000;
+    box-shadow: 5px 5px 0 #000;
+    cursor: pointer;
+    transition: transform 0.06s, box-shadow 0.06s, filter 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  #ringbell:hover { filter: brightness(1.08); }
+  #ringbell:hover .bell-svg { animation: shake 0.5s ease-in-out; transform-origin: 50% 6%; }
+  #ringbell:active { transform: translate(3px, 3px); box-shadow: 2px 2px 0 #000; }
+  #ringbell:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: 5px 5px 0 #000; }
+  #ringbell .bell-svg {
+    width: clamp(28px, 2.6vw, 38px);
+    height: clamp(28px, 2.6vw, 38px);
+    flex: 0 0 auto;
+    filter: drop-shadow(1px 1px 0 #5a3a0a);
+  }
+  @keyframes shake {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(-22deg); }
+    40% { transform: rotate(18deg); }
+    60% { transform: rotate(-14deg); }
+    80% { transform: rotate(10deg); }
+  }
+
+  #round-info {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(60px, 14vw, 220px);
+    color: #fff;
+    text-shadow: 4px 4px 0 #c8102e, 8px 8px 0 #000;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 30;
+    letter-spacing: 0.04em;
+  }
+  #round-info.show {
+    animation: pop 1.2s ease-out forwards;
+  }
+  @keyframes pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.6); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+  }
+
+  #timer {
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    font-family: 'Bungee', sans-serif;
+    font-size: 42px;
+    color: var(--gold);
+    background: #111;
+    padding: 4px 18px;
+    border: 3px solid var(--gold);
+    box-shadow: 3px 3px 0 #000;
+    z-index: 25;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #timer.show { opacity: 1; }
+
+  #fighter-tags {
+    position: fixed;
+    bottom: 24px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 36px;
+    z-index: 20;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  #fighter-tags.show { opacity: 1; }
+  .fighter-tag {
+    background: #111;
+    border: 3px solid var(--gold);
+    padding: 10px 18px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(18px, 2vw, 28px);
+    letter-spacing: 0.1em;
+    color: var(--ink);
+    box-shadow: 4px 4px 0 #000;
+    max-width: 38vw;
+  }
+  .fighter-tag.left { border-left: 12px solid #2b6cb0; }
+  .fighter-tag.right { border-right: 12px solid #c8102e; }
+  .fighter-tag .corner { display: block; font-size: 0.55em; color: var(--gold); letter-spacing: 0.3em; }
+
+  #notecard-wrap {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
-    padding: 24px;
+    pointer-events: none;
+    z-index: 40;
+    opacity: 0;
+    transition: opacity 0.5s;
   }
-  .modal.open { display: flex; }
-  .modal-card {
-    background: var(--bg);
-    border: 1px solid #222;
-    padding: 32px;
-    width: 100%;
-    max-width: 520px;
-    max-height: calc(100vh - 48px);
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  #notecard-wrap.show { opacity: 1; }
+  #notecard {
+    width: min(720px, 86vw);
+    background: var(--paper);
+    color: #1a1a1a;
+    padding: 36px 44px 44px;
+    font-family: 'Special Elite', 'Courier New', monospace;
+    box-shadow: 12px 14px 0 rgba(0,0,0,0.7);
+    border: 3px solid #1a1a1a;
+    transform: translateY(180px) rotate(-1.4deg);
+    transition: transform 0.6s cubic-bezier(.22,1.3,.36,1);
+    position: relative;
   }
-  .modal-card h2 {
-    font-size: 28px;
-    font-weight: 900;
-    letter-spacing: -0.02em;
+  #notecard-wrap.show #notecard {
+    transform: translateY(0) rotate(-1.4deg);
   }
-  .modal-card label {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    text-transform: uppercase;
-    color: var(--muted);
+  #notecard::before {
+    content: '';
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 18px;
+    background: var(--crimson);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.4);
+    border: 2px solid #1a1a1a;
   }
-  .modal-card input,
-  .modal-card select,
-  .modal-card textarea {
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid var(--muted);
-    color: var(--fg);
-    font-size: 16px;
+  #notecard h2 {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(20px, 2.2vw, 28px);
+    letter-spacing: 0.08em;
+    color: var(--crimson);
+    margin-bottom: 6px;
+  }
+  #notecard .winner-line {
+    font-family: 'Bungee', sans-serif;
+    font-size: clamp(24px, 3vw, 40px);
+    color: #1a1a1a;
+    margin-bottom: 18px;
+    line-height: 1.05;
+  }
+  #notecard .move-line {
+    font-size: clamp(14px, 1.4vw, 18px);
+    color: #8a3a13;
+    margin-bottom: 14px;
     font-weight: 700;
-    padding: 8px 0;
-    font-family: inherit;
-    outline: none;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
-  .modal-card textarea {
-    resize: none;
-    min-height: 56px;
-    text-transform: none;
-    font-weight: 400;
-    letter-spacing: 0;
+  #notecard .quip {
+    font-size: clamp(16px, 1.6vw, 22px);
+    line-height: 1.45;
+    border-top: 2px dashed #888;
+    padding-top: 14px;
+    color: #1a1a1a;
   }
-  .modal-card input:focus,
-  .modal-card select:focus,
-  .modal-card textarea:focus {
-    border-bottom-color: var(--accent);
-  }
-  .modal-card input[type="range"] {
-    -webkit-appearance: none;
-    appearance: none;
-    background: transparent;
-    border: none;
-    padding: 0;
-    height: 22px;
-    cursor: pointer;
-  }
-  .modal-card input[type="range"]::-webkit-slider-runnable-track {
-    height: 2px;
-    background: var(--muted);
-  }
-  .modal-card input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 14px;
-    height: 14px;
-    background: var(--accent);
-    border-radius: 0;
-    margin-top: -6px;
-  }
-  .modal-card input[type="range"]::-moz-range-track {
-    height: 2px;
-    background: var(--muted);
-  }
-  .modal-card input[type="range"]::-moz-range-thumb {
-    width: 14px;
-    height: 14px;
-    background: var(--accent);
-    border: none;
-    border-radius: 0;
-  }
-  .modal-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 18px;
-  }
-  .modal-card label .val {
-    color: var(--fg);
-    font-weight: 700;
-    letter-spacing: 0;
-    margin-left: 8px;
-    text-transform: none;
-  }
-  .modal-actions {
-    display: flex;
-    gap: 12px;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-  .modal-actions button {
-    background: transparent;
-    color: var(--fg);
-    border: 1px solid var(--muted);
-    padding: 12px 22px;
-    font-family: inherit;
+  #notecard .fineprint {
+    margin-top: 16px;
     font-size: 11px;
-    font-weight: 900;
     letter-spacing: 0.2em;
+    color: #777;
     text-transform: uppercase;
+  }
+  #replay {
+    position: fixed;
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    font-family: 'Bungee', sans-serif;
+    background: var(--gold);
+    color: #1a0a02;
+    padding: 10px 22px;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 #000;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.2s;
+    letter-spacing: 0.14em;
   }
-  .modal-actions .primary {
-    background: var(--accent);
-    color: var(--bg);
-    border-color: var(--accent);
-  }
-  .modal-actions button:hover { border-color: var(--fg); }
-  .modal-actions .primary:hover { background: var(--fg); }
-  .modal-status {
+  #replay.show { opacity: 1; pointer-events: auto; }
+
+  .credit {
+    position: fixed;
+    bottom: 8px;
+    right: 12px;
+    font-family: 'Bebas Neue', sans-serif;
     font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    min-height: 14px;
-  }
-  .modal-status.error { color: var(--accent); }
-  @media (max-width: 820px) {
-    html, body { height: auto; overflow: auto; -webkit-overflow-scrolling: touch; }
-    main { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; min-height: 100vh; }
-    .stage { height: 50vh; }
-    .panel { padding: 18px 18px 14px; gap: 14px; }
-    h1 { font-size: clamp(56px, 14vw, 96px); }
-    .controls { gap: 14px; max-width: 100%; }
-    input {
-      font-size: 22px;
-      padding: 10px 0;
-    }
-    #ingest {
-      width: 100%;
-      text-align: center;
-      align-self: stretch;
-      padding: 16px 18px;
-      font-size: 16px;
-      letter-spacing: 0.2em;
-    }
-    #invent {
-      width: 100%;
-      text-align: center;
-      align-self: stretch;
-      padding: 12px 14px;
-      margin-top: 0;
-    }
-    .menu {
-      gap: 2px 14px;
-      margin-top: 0;
-      max-width: 100%;
-    }
-    .menu-item { padding: 2px 0; min-height: 20px; line-height: 1.1; }
-    .stage { height: 30vh; min-height: 160px; }
-    .player {
-      height: auto;
-      padding: 8px 14px;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-    }
-    .player-progress { display: none; }
-    .player-art { width: 40px; height: 40px; }
-    .player-title { font-size: 13px; }
-    .player-artist { font-size: 10px; }
-    .player-play { width: 40px; height: 40px; font-size: 12px; }
-    .modal { padding: 12px; }
-    .modal-card {
-      padding: 22px;
-      gap: 16px;
-      max-height: calc(100vh - 24px);
-    }
-    .modal-card h2 { font-size: 22px; }
-    .modal-card input[type="range"]::-webkit-slider-thumb {
-      width: 20px;
-      height: 20px;
-      margin-top: -9px;
-    }
-    .modal-card input[type="range"]::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-    }
-    .modal-actions button { padding: 14px 18px; flex: 1; }
-  }
-  @media (max-width: 480px) {
-    .panel { padding: 14px 14px 10px; gap: 10px; }
-    h1 { font-size: clamp(52px, 16vw, 72px); }
-    input { font-size: 20px; padding: 8px 0; }
-    .menu-label { font-size: 10px; letter-spacing: 0.25em; }
-    .menu-item { font-size: 11px; }
-    .stage { min-height: 180px; }
-    .modal-row { grid-template-columns: 1fr; gap: 14px; }
+    letter-spacing: 0.3em;
+    color: #555;
+    z-index: 60;
   }
 </style>
 </head>
 <body>
-<main>
-  <section class="panel">
-    <h1>DRUGS</h1>
-    <div class="controls">
-      <input id="drug" type="text" placeholder="LSD" autocomplete="off" spellcheck="false" />
-      <div class="menu" id="menu">
-        <span class="menu-label">MENU /</span>
-      </div>
-      <button id="ingest">INGEST</button>
-      <button id="invent" type="button">+ INVENT DRUG</button>
-    </div>
-  </section>
-  <section class="stage">
-    <canvas id="c"></canvas>
-  </section>
-  <footer class="player">
-    <div class="player-track">
-      <img class="player-art" id="player-art" alt="" />
-      <div class="player-meta">
-        <div class="player-title" id="player-title">—</div>
-        <div class="player-artist" id="player-artist">No track</div>
-      </div>
-    </div>
-    <div class="player-progress">
-      <div class="status" id="status">SOBER</div>
-      <div class="bar"><i id="bar"></i></div>
-    </div>
-    <button class="player-play" id="player-play" aria-label="Play/pause" disabled>▶</button>
-  </footer>
-</main>
+<canvas id="stage"></canvas>
 
-<div class="modal" id="modal">
-  <div class="modal-card">
-    <h2>INVENT DRUG</h2>
-    <label>
-      NAME
-      <input id="m-name" type="text" placeholder="MOONDUST" maxlength="24" autocomplete="off" spellcheck="false" />
-    </label>
-    <div class="modal-row">
-      <label>
-        INTENSITY <span class="val" id="m-int-val">1.0</span>
-        <input id="m-intensity" type="range" min="0.2" max="2.0" step="0.1" value="1.0" />
-      </label>
-      <label>
-        DURATION <span class="val" id="m-dur-val">18s</span>
-        <input id="m-duration" type="range" min="6" max="45" step="1" value="18" />
-      </label>
-    </div>
-    <label>
-      MOTION
-      <select id="m-motion">
-        <option value="float">FLOAT — gentle bob</option>
-        <option value="wobble">WOBBLE — drunken sway</option>
-        <option value="pulse">PULSE — head throb</option>
-        <option value="fragment">FRAGMENT — glitch jumps</option>
-        <option value="jitter">JITTER — twitch</option>
-        <option value="slump">SLUMP — drowsy lean</option>
-        <option value="breathe">BREATHE — slow scale</option>
-        <option value="spin">SPIN — continuous rotate</option>
-        <option value="kipup">KIP-UP — knockdown cycle</option>
-        <option value="vanish">VANISH — k-hole fold</option>
-      </select>
-    </label>
-    <label>
-      PALETTE
-      <select id="m-palette">
-        <option value="none">DEFAULT — no color shift</option>
-        <option value="rainbow">RAINBOW — hue cycle</option>
-        <option value="warm">WARM — red / orange</option>
-        <option value="cool">COOL — blue / purple</option>
-        <option value="neon">NEON — hot glow</option>
-        <option value="monochrome">MONOCHROME — drained</option>
-      </select>
-    </label>
-    <label>
-      BACKGROUND TRIP
-      <select id="m-shader">
-        <option value="0">NONE</option>
-        <option value="1">PSYCHEDELIC KALEIDOSCOPE</option>
-        <option value="2">GLOW WAVES</option>
-        <option value="3">GEOMETRIC RUSH</option>
-        <option value="4">EUPHORIC SPIRAL</option>
-        <option value="5">WHITE VOID</option>
-      </select>
-    </label>
-    <label>
-      THEME SONG
-      <input id="m-song" type="text" placeholder="ARTIST — SONG TITLE" autocomplete="off" />
-    </label>
-    <div class="modal-status" id="m-status"></div>
-    <div class="modal-actions">
-      <button type="button" id="m-cancel">CANCEL</button>
-      <button type="button" id="m-submit" class="primary">CREATE</button>
-    </div>
+<div id="hud">
+  <div id="title">BATTLE OF BELIEFS<small>· THE THEOLOGICAL THROWDOWN ·</small></div>
+  <div id="matchmake">
+    <span class="mm-label">MATCH-MAKE</span>
+    <select id="fighter1" class="fighter-pick"></select>
+    <span class="vs-pill">VS</span>
+    <select id="fighter2" class="fighter-pick"></select>
+    <button id="ringbell">
+      <svg class="bell-svg" viewBox="0 0 44 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="brassGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#fff5c8"/>
+            <stop offset="0.28" stop-color="#f0c958"/>
+            <stop offset="0.62" stop-color="#b8861a"/>
+            <stop offset="1" stop-color="#6b4a10"/>
+          </linearGradient>
+          <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#c8932a"/>
+            <stop offset="1" stop-color="#7a5210"/>
+          </linearGradient>
+        </defs>
+        <!-- Crown loop -->
+        <path d="M20 5 Q20 0 22 0 Q24 0 24 5" stroke="#3a2410" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Yoke / cap -->
+        <ellipse cx="22" cy="7" rx="4.5" ry="1.6" fill="#7a5210" stroke="#3a2410" stroke-width="1"/>
+        <!-- Bell body -->
+        <path d="M8 34 C6 26 9 11 22 11 C35 11 38 26 36 34 Z" fill="url(#brassGrad)" stroke="#3a2410" stroke-width="1.6"/>
+        <!-- Shine highlight -->
+        <path d="M13 18 Q12 26 14 32" stroke="#fff8d8" stroke-width="2" fill="none" opacity="0.55" stroke-linecap="round"/>
+        <!-- Mouth rim -->
+        <ellipse cx="22" cy="35" rx="14" ry="3" fill="url(#rimGrad)" stroke="#3a2410" stroke-width="1.5"/>
+        <!-- Clapper hanging out the bottom -->
+        <line x1="22" y1="36" x2="22" y2="42" stroke="#3a2410" stroke-width="1.4"/>
+        <circle cx="22" cy="44" r="3.2" fill="#2a1a08" stroke="#3a2410" stroke-width="1"/>
+      </svg>
+      <span>RING THE BELL</span>
+    </button>
   </div>
 </div>
+
+<div id="timer">30</div>
+<div id="round-info"></div>
+
+<div id="fighter-tags">
+  <div class="fighter-tag left"><span class="corner">BLUE CORNER</span><span id="tag1">—</span></div>
+  <div class="fighter-tag right"><span class="corner">RED CORNER</span><span id="tag2">—</span></div>
+</div>
+
+<div id="notecard-wrap">
+  <div id="notecard">
+    <h2>OFFICIAL RULING</h2>
+    <div class="winner-line" id="nc-winner"></div>
+    <div class="move-line" id="nc-move"></div>
+    <div class="quip" id="nc-quip"></div>
+    <div class="fineprint">SIGNED, THE RING GIRL · BATTLE OF BELIEFS COMMISSION</div>
+  </div>
+</div>
+
+<button id="replay">REMATCH ANY TIME</button>
+
+<div class="credit">WEBGL · NO DEITIES WERE HARMED</div>
 
 <script type="importmap">
 {
@@ -546,871 +391,1913 @@
 <script type="module">
 import * as THREE from 'three';
 
-const canvas = document.getElementById('c');
+/* ============================================================
+   BELIEF SYSTEMS
+   ============================================================ */
+const BELIEFS = [
+  'Catholicism',
+  'Protestantism',
+  'Orthodox Judaism',
+  'Islam',
+  'Jainism',
+  'Hinduism',
+  'Taoism',
+  'Mormonism',
+  'Scientology',
+  'UFO-ology',
+  'Science',
+  'Atheism',
+  'Techno-Utopiaism',
+];
+
+// Visual config per belief: colors, head accessory, body details
+const FIGHTERS = {
+  'Catholicism': {
+    robe: 0xfefcf5, accent: 0xd6a737, shorts: 0xd6a737, skin: 0xf2cfa6,
+    head: 'mitre', emblem: 'cross', facial: null,
+  },
+  'Protestantism': {
+    robe: 0x1a1a1a, accent: 0xffffff, shorts: 0x1a1a1a, skin: 0xf2cfa6,
+    head: 'tabs', emblem: 'book', facial: null,
+  },
+  'Orthodox Judaism': {
+    robe: 0x111111, accent: 0xffffff, shorts: 0x111111, skin: 0xf2cfa6,
+    head: 'blackhat', emblem: 'tallit', facial: 'fullbeard',
+  },
+  'Islam': {
+    robe: 0xf4f4f4, accent: 0x14823a, shorts: 0x14823a, skin: 0xd9b58a,
+    head: 'turban', emblem: 'crescent', facial: 'shortbeard',
+  },
+  'Jainism': {
+    robe: 0xffffff, accent: 0xf2a93a, shorts: 0xffffff, skin: 0xd9b58a,
+    head: 'mukhpatti', emblem: 'broom', facial: null,
+  },
+  'Hinduism': {
+    robe: 0xf2832a, accent: 0xd6a737, shorts: 0xc23a14, skin: 0x6a7eb8,
+    head: 'crown', emblem: 'omarms', facial: null,
+  },
+  'Taoism': {
+    robe: 0x404044, accent: 0xf4f4f4, shorts: 0x202024, skin: 0xf2cfa6,
+    head: 'topknot', emblem: 'yinyang', facial: 'longbeard',
+  },
+  'Mormonism': {
+    robe: 0xffffff, accent: 0x1a1a1a, shorts: 0x1a1a1a, skin: 0xf2cfa6,
+    head: 'slick', emblem: 'nametag', facial: null,
+  },
+  'Scientology': {
+    robe: 0x202542, accent: 0xc0c4d6, shorts: 0x202542, skin: 0xf2cfa6,
+    head: 'slick', emblem: 'emeter', facial: null,
+  },
+  'UFO-ology': {
+    robe: 0xcfcfd6, accent: 0x6affd6, shorts: 0x444448, skin: 0xf2cfa6,
+    head: 'tinfoil', emblem: 'saucer', facial: null,
+  },
+  'Science': {
+    robe: 0xffffff, accent: 0x2b8cd6, shorts: 0x2b8cd6, skin: 0xf2cfa6,
+    head: 'einstein', emblem: 'beaker', facial: 'wildhair',
+  },
+  'Atheism': {
+    robe: 0x2c2c2c, accent: 0xc8102e, shorts: 0x2c2c2c, skin: 0xf2cfa6,
+    head: 'bald', emblem: 'redA', facial: 'glasses',
+  },
+  'Techno-Utopiaism': {
+    robe: 0x111122, accent: 0x6affd6, shorts: 0x222244, skin: 0xf2cfa6,
+    head: 'vr', emblem: 'circuit', facial: null,
+  },
+};
+
+/* ============================================================
+   MATCHUP MATRIX
+   Keys are sorted-tuple "A|B". Winner + finishing move + quip.
+   78 pairs total.
+   ============================================================ */
+function mkKey(a, b) { return [a, b].sort().join('|'); }
+
+const MATCHUPS = {};
+function M(a, b, winner, move, quip) {
+  MATCHUPS[mkKey(a, b)] = { winner, move, quip };
+}
+
+// Catholicism vs ...
+M('Catholicism', 'Protestantism', 'Protestantism',
+  'a Reformation cross-counter', "Protestantism nailed 95 theses, then nailed the dismount. Catholicism got Wittenberged.");
+M('Catholicism', 'Orthodox Judaism', 'Orthodox Judaism',
+  'a 5,786-year-old elbow', "Orthodox Judaism had been jabbing since Abraham. Catholicism showed up two millennia late and got tutored.");
+M('Catholicism', 'Islam', 'Islam',
+  'a five-prayers-a-day cardio combo', "Five prayers daily made for one fit fighter. Catholicism gassed out around Lauds.");
+M('Catholicism', 'Jainism', 'Jainism',
+  'an extremely non-violent sidestep', "The Pope swung. The pew was empty. Jainism's ahimsa dodge left him punching incense.");
+M('Catholicism', 'Hinduism', 'Hinduism',
+  'a four-armed pummeling (with a rosary in one hand for irony)', "Catholicism brought one God. Hinduism brought 33 million — and three of them threw hooks.");
+M('Catholicism', 'Taoism', 'Taoism',
+  'a non-doing of any visible kind', "Catholicism pushed; Taoism wasn't there. The Tao that can be punched is not the eternal Tao.");
+M('Catholicism', 'Mormonism', 'Catholicism',
+  'two thousand years of HR experience', "The Vatican has been managing scandals since before Mormonism had a postcode. Institutional memory wins.");
+M('Catholicism', 'Scientology', 'Catholicism',
+  'a free confession to the jaw', "Confession is free. Auditing is a subscription. Scientology ran out of credit by round two.");
+M('Catholicism', 'UFO-ology', 'Catholicism',
+  'a stained-glass left hook', "Stained glass beats tinfoil. Refraction over reflection, every time.");
+M('Catholicism', 'Science', 'Science',
+  'a peer-reviewed uppercut', "Galileo wanted a word. The Earth still moved — and it moved out of the way of the cross-counter.");
+M('Catholicism', 'Atheism', 'Catholicism',
+  'a faith-based jab', "Atheism shouted 'prove it.' The papal jab proved it. Q.E.D.");
+M('Catholicism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'an algorithmic absolution', "An app absolved Catholicism in 0.3 seconds. No priest, no Hail Marys, no overhead.");
+
+// Protestantism vs ...
+M('Protestantism', 'Orthodox Judaism', 'Orthodox Judaism',
+  'a millennia-deep counter', "Protestantism showed up in 1517. Orthodox Judaism showed up in 1500 BCE. Seniority took the W.");
+M('Protestantism', 'Islam', 'Islam',
+  'a cardio-of-the-faithful breaker', "Sunday-service stamina is no match for five-times-a-day training.");
+M('Protestantism', 'Jainism', 'Jainism',
+  'a calmly executed nothing', "Sola fide met sola ahimsa. Protestantism punched. The man wasn't there.");
+M('Protestantism', 'Hinduism', 'Hinduism',
+  'a multi-armed flurry', "One God versus thirty-three million. Even the math was unfair.");
+M('Protestantism', 'Taoism', 'Taoism',
+  'a flow-state float-and-sting', "Protestantism preached. Taoism flowed. Words bounced off water.");
+M('Protestantism', 'Mormonism', 'Mormonism',
+  'a clean-cut cross', "Mormonism is just Protestantism with extra steps — and the extra steps included a leg day.");
+M('Protestantism', 'Scientology', 'Protestantism',
+  'a back-to-basics body shot', "Protestantism literally invented protesting weird churches. Scientology never stood a chance.");
+M('Protestantism', 'UFO-ology', 'Protestantism',
+  'a sola scriptura slap', "At least one of them brought a book. Belief without evidence got knocked out by belief with a footnote.");
+M('Protestantism', 'Science', 'Science',
+  'a pH-1 splash to the face', "Protestantism brought King James. Science brought sulfuric acid. Chemistry wrote the eulogy.");
+M('Protestantism', 'Atheism', 'Protestantism',
+  'a believer's left hook', "Atheism showed up with a vibe. Protestantism showed up with a hymnal and follow-through.");
+M('Protestantism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a disrupted reformation', "Reformation got reformed. Disruption beats disruption when the disruption ships faster.");
+
+// Orthodox Judaism vs ...
+M('Orthodox Judaism', 'Islam', 'Orthodox Judaism',
+  'a Talmudic back-and-forth that ended in an elbow', "Both claimed Abraham. The grandson with more bar mitzvah money came in well-funded and well-rested.");
+M('Orthodox Judaism', 'Jainism', 'Jainism',
+  'a debate Jainism declined to attend', "You can't out-argue silence. The rabbi found himself shadow-boxing a polite vegan.");
+M('Orthodox Judaism', 'Hinduism', 'Hinduism',
+  'a reincarnated rope-a-dope', "Three reincarnations into the bout, the rabbi was still on round one. Cosmic respawn won.");
+M('Orthodox Judaism', 'Taoism', 'Taoism',
+  'a wuwei dodge', "Five thousand years of study versus five thousand years of un-study. Un-study had less to remember.");
+M('Orthodox Judaism', 'Mormonism', 'Orthodox Judaism',
+  'a cross-examination by an actual rabbi', "Mormonism's claim to be 'the real lost tribe' did not survive cross-examination by counsel that bills hourly.");
+M('Orthodox Judaism', 'Scientology', 'Orthodox Judaism',
+  'a guilt-fueled hook', "Five thousand years of guilt beats a thetan any day. The rabbi's mother helped throw the punch.");
+M('Orthodox Judaism', 'UFO-ology', 'Orthodox Judaism',
+  'a chosen-people choke-out', "Orthodox Judaism already knew G-d. He doesn't need to come from outer space.");
+M('Orthodox Judaism', 'Science', 'Orthodox Judaism',
+  'a Talmudic peer review', "The Talmud is just a four-thousand-year-old peer-review thread. The original methodology took the W.");
+M('Orthodox Judaism', 'Atheism', 'Orthodox Judaism',
+  'a brisket-based body shot', "Atheism said there's no God. The rabbi said, 'Fine, but what about the schedule?' Atheism could not argue with brisket.");
+M('Orthodox Judaism', 'Techno-Utopiaism', 'Orthodox Judaism',
+  'a 613-step combo', "Tech bros built the algorithm. Rabbis ARE the algorithm — six hundred and thirteen commandments deep.");
+
+// Islam vs ...
+M('Islam', 'Jainism', 'Jainism',
+  'a perfectly executed absence', "Even a jihad needs a target. The target had stepped aside to avoid stepping on an ant.");
+M('Islam', 'Hinduism', 'Hinduism',
+  'a six-armed flurry', "Six arms, six gloves. Two arms, two gloves. Arithmetic prevailed.");
+M('Islam', 'Taoism', 'Taoism',
+  'a single relaxed exhale', "Islam prayed five times. Taoism breathed once. The breath won.");
+M('Islam', 'Mormonism', 'Islam',
+  'a better-corner gospel', "Both received their book from an angel. Islam's angel had a better trainer.");
+M('Islam', 'Scientology', 'Islam',
+  'a submission to the better Submission', "Submission to God beats submission to L. Ron, especially when the latter charges by the hour.");
+M('Islam', 'UFO-ology', 'Islam',
+  'a 1,400-year-old citation slap', "Real revelation versus alleged abduction. The Qur'an has fourteen centuries of footnotes; UFO-ology has YouTube.");
+M('Islam', 'Science', 'Science',
+  'a differential-equations dive', "Islam invented algebra. Science inherited it and bought a graphing calculator. The heir collected the estate.");
+M('Islam', 'Atheism', 'Islam',
+  'an ummah-deep body shot', "Atheism brought a Reddit comment. Islam brought 1.8 billion siblings. Numbers helped.");
+M('Islam', 'Techno-Utopiaism', 'Islam',
+  'a source-code shoulder check', "Techno-Utopiaism said God is an algorithm. Islam said Allah wrote the algorithm. The source got copyright.");
+
+// Jainism vs ...
+M('Jainism', 'Hinduism', 'Jainism',
+  'a sweep — of ants — while opponent punched air', "Hinduism flailed at empty space for six rounds while Jainism quietly relocated a beetle. Patience won.");
+M('Jainism', 'Taoism', 'Taoism',
+  'a more thorough non-fighting', "Both refused to fight. Taoism refused harder. The void out-voided the void.");
+M('Jainism', 'Mormonism', 'Jainism',
+  'a doorbell that nobody answered', "Mormonism knocked. Jainism wasn't home — he was on the porch, sweeping bugs to safety.");
+M('Jainism', 'Scientology', 'Jainism',
+  'a free spiritual audit', "Scientology charged for the audit. Jainism audited for free, found Scientology lacking, opponent forfeited.");
+M('Jainism', 'UFO-ology', 'Jainism',
+  'a different kind of light', "UFO-ology saw lights. Jainism saw enlightenment. UFO blinked first.");
+M('Jainism', 'Science', 'Jainism',
+  'an unmeasurable feint', "Science observed; Jainism wasn't an event. Heisenberg quietly threw in the towel on his own behalf.");
+M('Jainism', 'Atheism', 'Jainism',
+  'a serene non-engagement', "Atheism punched harder air than usual — and pulled a muscle. Jainism collected the win without lifting a glove.");
+M('Jainism', 'Techno-Utopiaism', 'Jainism',
+  'a target the algorithm could not optimize', "The algorithm couldn't fit a function to a man who refused to be a data point.");
+
+// Hinduism vs ...
+M('Hinduism', 'Taoism', 'Taoism',
+  'a stream that wore down a mountain', "Hinduism brought 33 million gods. Taoism brought one quiet stream. Erosion is patient.");
+M('Hinduism', 'Mormonism', 'Hinduism',
+  'a six-armed door-slam', "Six arms versus door-to-door pamphlets. Distribution was outflanked by infrastructure.");
+M('Hinduism', 'Scientology', 'Hinduism',
+  'a free past-life recall', "Reincarnation is free. Auditing costs thousands per past life. Better unit economics.");
+M('Hinduism', 'UFO-ology', 'Hinduism',
+  'a Vedic vimana to the chin', "Hinduism has had flying chariots in scripture for three thousand years. UFO-ology rediscovered them without credit.");
+M('Hinduism', 'Science', 'Hinduism',
+  'a multiverse prediction, on time', "The Vedas predicted multiverses. Physics caught up — and was late for the opening bell.");
+M('Hinduism', 'Atheism', 'Hinduism',
+  'a buy-one-get-one godhead', "Atheism said 'no gods.' Hinduism said 'I have extras if you'd like one.' Atheism took the trade and got reincarnated.");
+M('Hinduism', 'Techno-Utopiaism', 'Hinduism',
+  'a Brahman-singularity merge', "Techno-Utopiaism is chasing the Singularity. Hinduism IS the Singularity — Brahman called and asked for prior art credit.");
+
+// Taoism vs ...
+M('Taoism', 'Mormonism', 'Taoism',
+  'a flow that went around the tie', "Taoism went with the flow. The flow went around Mormonism's tie and out the back of his head.");
+M('Taoism', 'Scientology', 'Taoism',
+  'a silence the audit could not bill for', "Auditing requires the subject to speak. The sage said nothing. The sage won — and was billed nothing.");
+M('Taoism', 'UFO-ology', 'Taoism',
+  'an inward gaze', "UFO-ology looked up. Taoism looked in. In was closer to the answer.");
+M('Taoism', 'Science', 'Taoism',
+  'an unmeasurable sweep', "Science needed an object to measure. Taoism declined to be one. The instrument shrugged.");
+M('Taoism', 'Atheism', 'Taoism',
+  'a deeper non-existence', "Atheism said God doesn't exist. Taoism said the existence question doesn't exist. The bigger negation won.");
+M('Taoism', 'Techno-Utopiaism', 'Taoism',
+  'an open-source silence', "Techno-Utopiaism shipped a chatbot. Taoism invented silence three thousand years ago. Superior product, zero compute.");
+
+// Mormonism vs ...
+M('Mormonism', 'Scientology', 'Mormonism',
+  'a wholesome jab with a casserole follow-through', "Two American originals walk into a ring. The one with the 401(k) and the family ward walked out.");
+M('Mormonism', 'UFO-ology', 'Mormonism',
+  'a documented angel uppercut', "Both involve aliens. Only one has a temple, a tabernacle, and a really good budget.");
+M('Mormonism', 'Science', 'Science',
+  'a request to see the golden plates', "Mormonism brought the Golden Plates. Science asked to inspect them. The bout ended in the lobby.");
+M('Mormonism', 'Atheism', 'Mormonism',
+  'an unstoppable conversation', "Nobody out-talks a missionary. Atheism's monologue got out-monologued at the door.");
+M('Mormonism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a push notification', "Door-to-door got replaced by push notifications. Distribution upgrade by a couple of decades.");
+
+// Scientology vs ...
+M('Scientology', 'UFO-ology', 'Scientology',
+  'a legally-binding thetan combo', "Scientology's aliens have lawyers. UFO-ology's aliens have blurry phone pics. Counsel won.");
+M('Scientology', 'Science', 'Science',
+  'a trademark dispute', "It's right there in the name. One of them is squatting on intellectual property and the other one wrote the textbook.");
+M('Scientology', 'Atheism', 'Atheism',
+  'a refusal to pay for the audit', "Atheism declined the audit. Scientology couldn't proceed without payment. Forfeit by invoice.");
+M('Scientology', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a freemium uppercut', "Techno-Utopiaism's cult is free. Scientology's cult charges by the hour. Free beats freemium beats paywall.");
+
+// UFO-ology vs ...
+M('UFO-ology', 'Science', 'Science',
+  'a peer-review pin', "Peer review pinned the saucer. Citation needed — none provided.");
+M('UFO-ology', 'Atheism', 'Atheism',
+  'a skeptical shrug to the temple', "UFO-ology believes too much. Atheism believes too little. Pure disbelief proved disarming.");
+M('UFO-ology', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a shipped spaceship', "Techno-Utopiaism already built the rocket. UFO-ology is still waiting at the landing pad with a snack.");
+
+// Science vs ...
+M('Science', 'Atheism', 'Science',
+  'a method to the madness', "Atheism is a hobby. Science is a method. Methodology pinned the hobbyist in round two.");
+M('Science', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a patented digestion', "Techno-Utopiaism ate Science's lunch — and then patented the digestion process.");
+
+// Atheism vs Techno-Utopiaism
+M('Atheism', 'Techno-Utopiaism', 'Techno-Utopiaism',
+  'a self-deifying upload', "Atheism said no god is needed. Techno-Utopiaism said 'I AM god now.' Capitalization carried the round.");
+
+/* ============================================================
+   THREE.JS SCENE
+   ============================================================ */
+const canvas = document.getElementById('stage');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x050505);
+scene.background = new THREE.Color(0x06070b);
+scene.fog = new THREE.Fog(0x06070b, 18, 50);
 
-const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 100);
-camera.position.set(0, 1.4, 6.5);
-camera.lookAt(0, 1.1, 0);
-
-const avatar = new THREE.Group();
-scene.add(avatar);
-
-const skin = new THREE.MeshStandardMaterial({ color: 0xeeeeee, roughness: 0.45, metalness: 0.05 });
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.1 });
-
-const head = new THREE.Mesh(new THREE.IcosahedronGeometry(0.9, 4), skin);
-head.position.y = 2;
-avatar.add(head);
-
-const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.65, 1.4, 8, 16), skin);
-body.position.y = 0.5;
-avatar.add(body);
-
-const eyeGeo = new THREE.SphereGeometry(0.1, 16, 16);
-const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-leftEye.position.set(-0.28, 2.12, 0.78);
-avatar.add(leftEye);
-const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-rightEye.position.set(0.28, 2.12, 0.78);
-avatar.add(rightEye);
-
-const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(3, 32),
-  new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 1 })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.4;
-scene.add(ground);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-const key = new THREE.DirectionalLight(0xffffff, 1.4);
-key.position.set(3, 6, 5);
-scene.add(key);
-const rim = new THREE.DirectionalLight(0xff5b1f, 0.55);
-rim.position.set(-4, 2, -3);
-scene.add(rim);
-
-const tripMat = new THREE.ShaderMaterial({
-  uniforms: {
-    uTime: { value: 0 },
-    uIntensity: { value: 0 },
-    uMode: { value: 0 },
-  },
-  transparent: true,
-  depthWrite: false,
-  vertexShader: `
-    varying vec2 vUv;
-    void main() {
-      vUv = uv;
-      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    }
-  `,
-  fragmentShader: `
-    varying vec2 vUv;
-    uniform float uTime;
-    uniform float uIntensity;
-    uniform int uMode;
-    vec3 hsv2rgb(vec3 c){
-      vec4 K = vec4(1.0, 2.0/3.0, 1.0/3.0, 3.0);
-      vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-      return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }
-    void main() {
-      vec2 p = vUv - 0.5;
-      float r = length(p);
-      float a = atan(p.y, p.x);
-      vec3 col = vec3(0.0);
-      if (uMode == 1) {
-        float k = 6.0;
-        float aa = mod(a, 6.2831/k) - 3.1415/k;
-        vec2 q = vec2(cos(aa), sin(aa)) * r;
-        float v = sin(q.x*22.0 + uTime*2.0) + sin(q.y*18.0 - uTime*1.7);
-        col = hsv2rgb(vec3(fract(v*0.12 + uTime*0.08), 0.85, 0.65));
-      } else if (uMode == 2) {
-        float v = sin(r*28.0 - uTime*1.8);
-        col = hsv2rgb(vec3(0.05 + 0.08*sin(uTime*0.5), 0.55, 0.4 + v*0.25));
-      } else if (uMode == 3) {
-        float v = sin(a*8.0 + uTime*5.0)*0.5 + sin(r*44.0 - uTime*8.0)*0.5;
-        col = hsv2rgb(vec3(fract(v*0.4 + uTime*0.35), 1.0, 0.55 + 0.45*v));
-      } else if (uMode == 4) {
-        float v = sin(a*3.0 + uTime*2.0) * 0.5;
-        col = hsv2rgb(vec3(fract(uTime*0.2 + a*0.16), 0.8, 0.5 + 0.5*v));
-      } else if (uMode == 5) {
-        float k = 8.0;
-        float aa = mod(a + uTime * 0.09, 6.2831/k) - 3.1415/k;
-        vec2 q = vec2(cos(aa), sin(aa)) * r;
-        float v = sin(q.x * 30.0 + uTime * 1.0)
-                + sin(q.y * 22.0 - uTime * 0.8)
-                + sin((q.x + q.y) * 44.0 - uTime * 1.3) * 0.6;
-        float hue = fract(v * 0.14 + uTime * 0.05);
-        vec3 rainbow = hsv2rgb(vec3(hue, 0.95, 0.55 + 0.3 * v));
-        float core = pow(max(0.0, 1.0 - r * 1.7), 3.5);
-        float pulse = 0.45 + 0.55 * sin(uTime * 0.55);
-        col = rainbow * (0.85 - core * 0.55) + vec3(core * pulse * 1.4);
-      }
-      gl_FragColor = vec4(col, uIntensity);
-    }
-  `,
-});
-const tripPlane = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), tripMat);
-tripPlane.position.z = -8;
-scene.add(tripPlane);
-
-const drugs = {
-  lsd:        { duration: 28, tripMode: 1 },
-  acid:       { duration: 28, tripMode: 1 },
-  mushrooms:  { duration: 24, tripMode: 2 },
-  shrooms:    { duration: 24, tripMode: 2 },
-  psilocybin: { duration: 24, tripMode: 2 },
-  dmt:        { duration: 14, tripMode: 3 },
-  '5-meo-dmt (toad)': { duration: 14, tripMode: 5 },
-  '5-meo-dmt': { duration: 14, tripMode: 5 },
-  '5 meo dmt': { duration: 14, tripMode: 5 },
-  '5meodmt':   { duration: 14, tripMode: 5 },
-  '5meo':      { duration: 14, tripMode: 5 },
-  toad:        { duration: 14, tripMode: 5 },
-  bufo:        { duration: 14, tripMode: 5 },
-  mdma:       { duration: 22, tripMode: 4 },
-  ecstasy:    { duration: 22, tripMode: 4 },
-  molly:      { duration: 22, tripMode: 4 },
-  caffeine:   { duration: 12 },
-  coffee:     { duration: 12 },
-  cocaine:    { duration: 14 },
-  coke:       { duration: 14 },
-  weed:       { duration: 20 },
-  cannabis:   { duration: 20 },
-  marijuana:  { duration: 20 },
-  alcohol:    { duration: 18 },
-  beer:       { duration: 18 },
-  wine:       { duration: 18 },
-  ketamine:   { duration: 34 },
-  k:          { duration: 34 },
-  meth:       { duration: 18 },
-  heroin:     { duration: 45 },
-  opioid:     { duration: 45 },
-  nicotine:   { duration: 8 },
-  adderall:   { duration: 14 },
-  unknown:    { duration: 12 },
-};
-
-const effects = {
-  lsd: (t, i) => {
-    const hue = (t * 0.1) % 1;
-    skin.color.setHSL(hue, 0.55, 0.7);
-    skin.emissive.setHSL(hue, 1, 0.22 * i);
-    head.scale.setScalar(1 + Math.sin(t * 2) * 0.12 * i);
-    avatar.rotation.y = Math.sin(t * 0.7) * 0.55 * i;
-    avatar.rotation.z = Math.sin(t * 1.1) * 0.18 * i;
-    avatar.position.y = Math.sin(t * 0.6) * 0.1 * i;
-  },
-  acid: (t, i) => effects.lsd(t, i),
-  mushrooms: (t, i) => {
-    const breathe = Math.sin(t * 0.9) * 0.16 * i;
-    head.scale.setScalar(1 + breathe);
-    body.scale.set(1 + breathe * 0.6, 1, 1 + breathe * 0.6);
-    avatar.rotation.x = Math.sin(t * 0.4) * 0.12 * i;
-    skin.color.setHSL(0.05 + Math.sin(t * 0.3) * 0.06, 0.42, 0.6);
-    skin.emissive.setHSL(0.08, 0.4, 0.12 * i);
-  },
-  shrooms: (t, i) => effects.mushrooms(t, i),
-  psilocybin: (t, i) => effects.mushrooms(t, i),
-  dmt: (t, i) => {
-    const hue = (t * 0.6) % 1;
-    skin.emissive.setHSL(hue, 1, 0.45 * i);
-    skin.color.setHSL(hue, 0.5, 0.6);
-    avatar.position.z = Math.sin(t * 9) * 0.35 * i;
-    head.scale.setScalar(1 + Math.sin(t * 14) * 0.18 * i);
-    avatar.rotation.y = t * 0.9 * i;
-  },
-  '5-meo-dmt (toad)': (t, i) => {
-    const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 12;
-    const phase = (elapsed % cycleLen) / cycleLen;
-    const hue = (t * 0.18) % 1;
-    const g1 = Math.sin(t * 0.7);
-    const g2 = Math.sin(t * 0.5 + 1.3);
-    const g3 = Math.sin(t * 0.9 + 2.1);
-    if (phase < 0.55) {
-      const p = phase / 0.55;
-      const ease = p * p;
-      const s = 1 + ease * 0.5;
-      avatar.scale.set(s * (1 + g1 * 0.12), s * (1 - g1 * 0.18), s * (1 + g2 * 0.1));
-      skin.color.setHSL(hue, 0.7, 0.55 + ease * 0.3);
-      skin.emissive.setHSL(hue, 1, 0.5 * ease);
-      avatar.rotation.y = ease * Math.PI * 0.3 + t * 0.25;
-      avatar.rotation.z = g1 * 0.2;
-      avatar.rotation.x = g3 * 0.12;
-      head.rotation.z = g2 * 0.45;
-      head.rotation.x = g3 * 0.3;
-      head.position.set(g1 * 0.28, 2 + g2 * 0.4, g3 * 0.22);
-      body.scale.set(1 - g1 * 0.18, 1 + g1 * 0.28, 1 - g1 * 0.18);
-      leftEye.visible = false;
-      rightEye.visible = false;
-    } else if (phase < 0.66) {
-      const p = (phase - 0.55) / 0.11;
-      const ease = 1 - Math.pow(1 - p, 3);
-      avatar.scale.setScalar(1.5 - ease * 1.48);
-      skin.color.setHSL(hue, 0.7 - ease * 0.7, 0.9 + ease * 0.1);
-      skin.emissive.setHSL(hue, 1 - ease, 0.5 - ease * 0.2);
-      avatar.rotation.z = g1 * 0.2 * (1 - ease);
-      head.rotation.z = g2 * 0.45 * (1 - ease);
-      leftEye.visible = false;
-      rightEye.visible = false;
-    } else if (phase < 0.88) {
-      avatar.scale.setScalar(0.02);
-      skin.color.setHex(0xffffff);
-      skin.emissive.setRGB(0.85, 0.82, 0.75);
-      leftEye.visible = false;
-      rightEye.visible = false;
-    } else {
-      const p = (phase - 0.88) / 0.12;
-      const ease = 1 - Math.pow(1 - p, 4);
-      avatar.scale.setScalar(0.02 + ease * 0.98);
-      skin.color.setHSL(hue, 0.7 * ease, 0.95 - ease * 0.25);
-      skin.emissive.setHSL(hue, 1, 0.55 * (1 - ease * 0.5));
-      avatar.rotation.z = g1 * 0.2 * ease;
-      head.rotation.z = g2 * 0.45 * ease;
-    }
-  },
-  '5-meo-dmt': (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  '5 meo dmt': (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  '5meodmt':   (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  '5meo':      (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  toad:        (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  bufo:        (t, i) => effects['5-meo-dmt (toad)'](t, i),
-  mdma: (t, i) => {
-    const hue = (t * 0.4) % 1;
-    skin.color.setHSL(hue, 0.5, 0.7);
-    skin.emissive.setHSL(hue, 0.9, 0.28 * i);
-    avatar.position.y = Math.abs(Math.sin(t * 3)) * 0.45 * i;
-    avatar.rotation.y = Math.sin(t * 2) * 0.35 * i;
-    head.scale.setScalar(1 + Math.sin(t * 6) * 0.05 * i);
-  },
-  ecstasy: (t, i) => effects.mdma(t, i),
-  molly: (t, i) => effects.mdma(t, i),
-  caffeine: (t, i) => {
-    avatar.position.x = (Math.random() - 0.5) * 0.04 * i;
-    avatar.position.y = (Math.random() - 0.5) * 0.04 * i;
-    head.rotation.y = Math.sin(t * 9) * 0.28 * i;
-    body.scale.set(1 + Math.sin(t * 5) * 0.02 * i, 1, 1);
-  },
-  coffee: (t, i) => effects.caffeine(t, i),
-  cocaine: (t, i) => {
-    avatar.position.x = (Math.random() - 0.5) * 0.09 * i;
-    avatar.position.y = (Math.random() - 0.5) * 0.09 * i;
-    head.rotation.y = Math.sin(t * 13) * 0.45 * i;
-    skin.emissive.setRGB(0.35 * i, 0.06 * i, 0.06 * i);
-  },
-  coke: (t, i) => effects.cocaine(t, i),
-  weed: (t, i) => {
-    avatar.position.y = Math.sin(t * 0.6) * 0.18 * i - 0.18 * i;
-    avatar.rotation.z = Math.sin(t * 0.4) * 0.18 * i;
-    head.rotation.z = Math.sin(t * 0.5) * 0.22 * i;
-    head.rotation.x = 0.15 * i;
-    eyeMat.color.setRGB(0.1 + 0.8 * i, 0.05, 0.05);
-  },
-  cannabis: (t, i) => effects.weed(t, i),
-  marijuana: (t, i) => effects.weed(t, i),
-  alcohol: (t, i) => {
-    const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 4.5;
-    const phase = (elapsed % cycleLen) / cycleLen;
-    skin.color.setHSL(0.02, 0.5, 0.65);
-    if (phase < 0.25) {
-      // wobble (drunken stagger)
-      const w = Math.sin(elapsed * 5);
-      avatar.rotation.z = w * 0.18;
-      avatar.position.x = w * 0.25;
-      head.rotation.z = Math.sin(elapsed * 3 + 1) * 0.18;
-    } else if (phase < 0.4) {
-      // KNOCKED DOWN — tip onto back
-      const p = (phase - 0.25) / 0.15;
-      const ease = p * p;
-      avatar.rotation.x = -Math.PI / 2 * ease;
-      avatar.position.y = -ease * 0.3;
-      avatar.position.z = -ease * 0.35;
-    } else if (phase < 0.65) {
-      // lying flat
-      avatar.rotation.x = -Math.PI / 2;
-      avatar.position.y = -0.3;
-      avatar.position.z = -0.35;
-    } else if (phase < 0.78) {
-      // Neo prep — back arches off the ground
-      const p = (phase - 0.65) / 0.13;
-      avatar.rotation.x = -Math.PI / 2 + p * (Math.PI / 5);
-      avatar.position.y = -0.3 + p * 0.12;
-    } else if (phase < 0.92) {
-      // SPRING UP! bullet-time kip-up
-      const p = (phase - 0.78) / 0.14;
-      const ease = 1 - Math.pow(1 - p, 3);
-      const startRot = -Math.PI / 2 + Math.PI / 5;
-      avatar.rotation.x = startRot * (1 - ease);
-      avatar.position.y = -0.18 * (1 - ease) + Math.sin(p * Math.PI) * 0.25;
-      avatar.position.z = -0.35 * (1 - ease);
-    } else {
-      // brief triumph
-      const p = (phase - 0.92) / 0.08;
-      avatar.rotation.z = Math.sin(p * Math.PI * 6) * 0.06;
-    }
-  },
-  beer: (t, i) => effects.alcohol(t, i),
-  wine: (t, i) => effects.alcohol(t, i),
-  ketamine: (t, i) => {
-    const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 30;
-    const phase = (elapsed % cycleLen) / cycleLen;
-    skin.color.setHSL(0.6, 0.1, 0.55);
-    leftEye.visible = false;
-    rightEye.visible = false;
-    if (phase < 0.12) {
-      // K-hole onset — slow dazed wobble
-      const w = (phase / 0.12);
-      head.rotation.x = Math.sin(t * 0.6) * 0.25 + w * 0.2;
-      head.rotation.z = Math.sin(t * 0.5) * 0.18;
-      avatar.rotation.z = Math.sin(t * 0.35) * 0.14;
-      leftEye.visible = true;
-      rightEye.visible = true;
-    } else if (phase < 0.5) {
-      // slow bend-over — body folds forward, head inverts and starts the descent
-      const p = (phase - 0.12) / 0.38;
-      const ease = p * p * (3 - 2 * p);
-      body.rotation.x = ease * 0.95;
-      head.rotation.x = ease * Math.PI;
-      head.position.y = 2 - ease * 1.45;
-      head.position.z = ease * 0.18;
-      avatar.position.y = -ease * 0.12;
-    } else if (phase < 0.68) {
-      // head dives into his own ass
-      const p = (phase - 0.5) / 0.18;
-      const ease = p * p;
-      body.rotation.x = 0.95 + ease * 0.35;
-      head.rotation.x = Math.PI;
-      head.position.y = 0.55 - ease * 1.05;
-      head.position.z = 0.18 - ease * 0.32;
-      head.scale.setScalar(1 - ease * 0.88);
-      body.scale.setScalar(1 - ease * 0.18);
-      avatar.position.y = -0.12 - ease * 0.06;
-    } else if (phase < 0.88) {
-      // gone — vanished
-      avatar.scale.setScalar(0.02);
-      head.scale.setScalar(0.02);
-      avatar.position.y = -0.2;
-    } else {
-      // pop back upright
-      const p = (phase - 0.88) / 0.12;
-      const ease = 1 - Math.pow(1 - p, 4);
-      avatar.scale.setScalar(0.02 + ease * 0.98);
-      body.rotation.x = 1.3 * (1 - ease);
-      head.rotation.x = Math.PI * (1 - ease);
-      head.position.y = -0.5 + ease * 2.5;
-      head.position.z = -0.14 * (1 - ease);
-      head.scale.setScalar(0.12 + ease * 0.88);
-      body.scale.setScalar(0.82 + ease * 0.18);
-      avatar.position.y = -0.2 * (1 - ease);
-      leftEye.visible = ease > 0.85;
-      rightEye.visible = ease > 0.85;
-    }
-  },
-  k: (t, i) => effects.ketamine(t, i),
-  meth: (t, i) => {
-    avatar.position.x = (Math.random() - 0.5) * 0.14 * i;
-    avatar.position.y = (Math.random() - 0.5) * 0.14 * i;
-    head.scale.setScalar(1 + Math.sin(t * 18) * 0.12 * i);
-    skin.emissive.setRGB(0.45 * i, 0.22 * i, 0);
-    head.rotation.y = Math.sin(t * 20) * 0.3 * i;
-  },
-  heroin: (t, i) => {
-    const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 45;
-    const phase = (elapsed % cycleLen) / cycleLen;
-    if (phase < 0.15) {
-      // standing slump — drowsy sway
-      const p = phase / 0.15;
-      avatar.position.y = -0.1 * p;
-      avatar.rotation.z = Math.sin(t * 0.3) * 0.12 * (1 - p) + 0.06 * p;
-      head.rotation.x = 0.2 + p * 0.2;
-      head.rotation.z = -0.08 * p;
-      skin.color.setHSL(0.6, 0.05, 0.55);
-    } else if (phase < 0.4) {
-      // knees buckle — slow collapse
-      const p = (phase - 0.15) / 0.25;
-      const ease = p * p * (3 - 2 * p);
-      avatar.position.y = -0.1 - ease * 0.32;
-      avatar.scale.y = 1 - ease * 0.3;
-      avatar.rotation.x = ease * 0.45;
-      avatar.rotation.z = 0.06 + Math.sin(t * 0.25) * 0.08 * (1 - ease);
-      head.rotation.x = 0.4 + ease * 0.35;
-      head.rotation.z = -0.08;
-      skin.color.setHSL(0.6, 0.04, 0.55 - ease * 0.08);
-    } else if (phase < 0.6) {
-      // tip all the way over — lying on the floor
-      const p = (phase - 0.4) / 0.2;
-      const ease = p * p * (3 - 2 * p);
-      avatar.position.y = -0.42 - ease * 0.1;
-      avatar.rotation.x = 0.45 + ease * 0.85;
-      avatar.scale.y = 0.7;
-      avatar.scale.x = 1 + ease * 0.2;
-      avatar.scale.z = 1 + ease * 0.2;
-      avatar.rotation.z = 0.06;
-      head.rotation.x = 0.75 + ease * 0.15;
-      skin.color.setHSL(0.6, 0.03, 0.47 - ease * 0.05);
-    } else if (phase < 0.88) {
-      // melt into the floor — puddle spreading
-      const p = (phase - 0.6) / 0.28;
-      const ease = p * p;
-      avatar.position.y = -0.55 - ease * 0.04;
-      avatar.rotation.x = 1.3;
-      avatar.scale.y = 0.7 - ease * 0.55;
-      avatar.scale.x = 1.2 + ease * 0.6;
-      avatar.scale.z = 1.2 + ease * 0.6;
-      head.rotation.x = 0.9;
-      head.scale.setScalar(1 - ease * 0.5);
-      skin.color.setHSL(0.6, 0.02, 0.42 - ease * 0.22);
-    } else {
-      // disappear
-      const p = (phase - 0.88) / 0.12;
-      const ease = 1 - Math.pow(1 - p, 3);
-      avatar.position.y = -0.59;
-      avatar.rotation.x = 1.3;
-      avatar.scale.x = 1.8 * (1 - ease);
-      avatar.scale.y = 0.15 * (1 - ease);
-      avatar.scale.z = 1.8 * (1 - ease);
-      head.scale.setScalar(0.5 * (1 - ease));
-      skin.color.setHSL(0.6, 0.02, 0.2);
-    }
-    leftEye.visible = phase < 0.2;
-    rightEye.visible = phase < 0.2;
-  },
-  opioid: (t, i) => effects.heroin(t, i),
-  nicotine: (t, i) => {
-    avatar.position.y = Math.sin(t * 4) * 0.02 * i;
-    head.rotation.y = Math.sin(t * 0.5) * 0.12 * i;
-    skin.emissive.setRGB(0.05 * i, 0.05 * i, 0.05 * i);
-  },
-  adderall: (t, i) => {
-    const elapsed = Math.max(0, t - state.startTime);
-    const cycleLen = 14;
-    const phase = (elapsed % cycleLen) / cycleLen;
-    if (phase < 0.6) {
-      // FIDGETY — jumpy, can't sit still
-      avatar.position.x = (Math.random() - 0.5) * 0.2 + Math.sin(t * 9) * 0.08;
-      avatar.position.y = Math.abs(Math.sin(t * 11)) * 0.14 + (Math.random() - 0.5) * 0.06;
-      avatar.position.z = (Math.random() - 0.5) * 0.06;
-      head.rotation.y = Math.sin(t * 13) * 0.5 + (Math.random() - 0.5) * 0.18;
-      head.rotation.x = Math.sin(t * 9) * 0.22;
-      head.rotation.z = (Math.random() - 0.5) * 0.2;
-      body.scale.set(1 + Math.sin(t * 14) * 0.07, 1 + Math.sin(t * 16) * 0.05, 1);
-      skin.emissive.setRGB(0.25, 0.18, 0.05);
-      leftEye.visible = Math.random() > 0.04;
-      rightEye.visible = Math.random() > 0.04;
-    } else if (phase < 0.78) {
-      // winding down — fidgets bleed out as focus locks in
-      const p = (phase - 0.6) / 0.18;
-      const ease = 1 - Math.pow(1 - p, 3);
-      const amp = 1 - ease;
-      avatar.position.x = Math.sin(t * 9) * 0.05 * amp + (Math.random() - 0.5) * 0.09 * amp;
-      avatar.position.y = Math.sin(t * 11) * 0.05 * amp;
-      head.rotation.y = Math.sin(t * 12) * 0.18 * amp;
-      head.rotation.x = Math.sin(t * 9) * 0.08 * amp;
-      skin.emissive.setRGB(0.25 - ease * 0.07, 0.18 - ease * 0.05, 0.05);
-    } else {
-      // SUPER FOCUS — locked in, eyes bulging
-      const p = (phase - 0.78) / 0.22;
-      const ease = 1 - Math.pow(1 - p, 4);
-      head.position.set(0, 2, 0);
-      body.scale.set(1, 1, 1);
-      const eyeBoost = 1 + ease * 1.8;
-      leftEye.scale.setScalar(eyeBoost);
-      rightEye.scale.setScalar(eyeBoost);
-      leftEye.position.set(-0.28 - ease * 0.03, 2.12, 0.78 + ease * 0.08);
-      rightEye.position.set(0.28 + ease * 0.03, 2.12, 0.78 + ease * 0.08);
-      eyeMat.color.setRGB(0.02, 0.02, 0.02);
-      skin.emissive.setRGB(0.18, 0.1, 0.02);
-    }
-  },
-  unknown: (t, i) => {
-    head.rotation.y = Math.sin(t * 2.5) * 0.4 * i;
-    avatar.position.y = Math.sin(t * 3) * 0.06 * i;
-    avatar.rotation.z = Math.sin(t * 1.7) * 0.1 * i;
-    skin.color.setHSL((t * 0.5) % 1, 0.3, 0.5);
-  },
-};
-
-const tracks = {
-  lsd:        { title: 'White Rabbit',           artist: 'Jefferson Airplane',         preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/9d/7f/c6/9d7fc652-907c-b040-3ee0-07de78b6e064/mzaf_5136406247672899456.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5c/bd/17/5cbd17d6-ceea-e185-e889-ee494cc650da/828765035125.jpg/100x100bb.jpg' },
-  mushrooms:  { title: 'Tomorrow Never Knows',   artist: 'The Beatles',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/c8/f8/b7/c8f8b737-1697-de3a-5345-571e0a9722cc/mzaf_9296497573197633805.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/58/4a/10/584a1058-de0a-6a6b-d0bd-da09a028b8bc/00602567705499.rgb.jpg/100x100bb.jpg' },
-  dmt:        { title: 'Astronomy Domine',       artist: 'Pink Floyd',                  preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/4f/91/c0/4f91c072-5a27-3737-8aae-491196ef4572/mzaf_13281052479360747595.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e7/b4/d3/e7b4d3e0-66d5-0cea-4054-47f3e8bae778/886445635799.jpg/100x100bb.jpg' },
-  '5-meo-dmt (toad)': { title: 'The Great Gig In the Sky', artist: 'Pink Floyd',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/64/51/55/645155d0-6975-ccb8-09c4-e12e9c8142d6/mzaf_3811382614414875720.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3e/76/b0/3e76b0e3-762b-2286-a019-8afb19cee541/886445635829.jpg/100x100bb.jpg' },
-  mdma:       { title: 'Strobe',                 artist: 'deadmau5',                    preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/11/92/1b/11921b51-1ed8-ecf1-cb92-41c7af1e2942/mzaf_7176793560074956543.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/f7/24/19/f724197c-b6b7-b2ad-94a9-06b2f5f95455/617465226458.jpg/100x100bb.jpg' },
-  ketamine:   { title: 'Three Little Birds',     artist: 'Bob Marley & The Wailers',    preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/af/fc/90/affc9056-e658-fe90-0f07-a8790d1d7265/mzaf_9608562567489878696.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3c/c2/0d/3cc20dcc-8f4e-f060-36dd-7de52a7ec8fe/12UMGIM14712.rgb.jpg/100x100bb.jpg' },
-  weed:       { title: 'I Wanna Get High',       artist: 'Cypress Hill',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/dd/49/ac/dd49ac4c-a83c-9976-4cce-66bb3394fc73/mzaf_16154692503504516639.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/63/01/43/63014383-c3f0-d31d-46a7-5cecb3dece1d/074645729626.jpg/100x100bb.jpg' },
-  alcohol:    { title: 'Tubthumping',            artist: 'Chumbawamba',                 preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/b6/d2/ac/b6d2ac02-2784-81f6-d763-08e0b2be1dfe/mzaf_12670863909406805270.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/e0/a1/ef/e0a1ef4a-6aa6-f614-6351-05a348fd4b56/13UABIM57031.rgb.jpg/100x100bb.jpg' },
-  caffeine:   { title: 'Coffee Blues',           artist: 'Mississippi John Hurt',       preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/95/87/59/9587591d-6c60-3f5e-c9b4-1df893e6345e/mzaf_983228377728721282.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b6/39/ca/b639cabf-0769-5dbd-0224-fd0cf247cb0b/24CRGIM45571.rgb.jpg/100x100bb.jpg' },
-  nicotine:   { title: 'Cigarette Daydreams',    artist: 'Cage the Elephant',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/06/02/88/060288d9-8d59-f2de-b03e-dd3ec84ae23a/mzaf_16545072701979127359.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/02/d2/e2/02d2e290-82c9-bcf4-73fa-4cd06f65f4b9/886444143073.jpg/100x100bb.jpg' },
-  adderall:   { title: 'Stressed Out',           artist: 'twenty one pilots',           preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/a9/74/e8/a974e8f2-0693-9371-bb6c-87047a486254/mzaf_1898989387861959316.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/8e/e2/89/8ee28904-0821-610d-5011-a61845f62756/075679926951.jpg/100x100bb.jpg' },
-  cocaine:    { title: 'Cocaine',                artist: 'Eric Clapton',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/bc/4c/05/bc4c05fe-7981-d4bb-1a88-7439b510e609/mzaf_13253847105565151631.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e6/8b/8e/e68b8eb1-ddce-3332-4e66-5a15ccc04d6f/00600753407301.rgb.jpg/100x100bb.jpg' },
-  meth:       { title: 'Methamphetamine Blues',  artist: 'Mark Lanegan',                preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/64/6d/b6/646db6ec-add5-b96d-2689-5a714cadccd8/mzaf_9952697079338265904.plus.aac.p.m4a',  art: 'https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/5c/b6/e7/5cb6e780-4d29-3460-932f-1bf60f3cbd85/607618023782.png/100x100bb.jpg' },
-  heroin:     { title: 'Something In The Way',   artist: 'Nirvana',                       preview: 'https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/cc/b5/cd/ccb5cdf2-26a1-7e4f-779c-98ea3095e1fb/mzaf_11306403304784547761.plus.aac.p.m4a', art: 'https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/95/fd/b9/95fdb9b2-6d2b-92a6-97f2-51c1a6d77f1a/00602527874609.rgb.jpg/100x100bb.jpg' },
-};
-const aliasGroups = [
-  ['lsd', 'acid'],
-  ['mushrooms', 'shrooms', 'psilocybin'],
-  ['mdma', 'ecstasy', 'molly'],
-  ['ketamine', 'k'],
-  ['caffeine', 'coffee'],
-  ['cocaine', 'coke'],
-  ['weed', 'cannabis', 'marijuana'],
-  ['alcohol', 'beer', 'wine'],
-  ['heroin', 'opioid'],
-  ['5-meo-dmt (toad)', '5-meo-dmt', '5 meo dmt', '5meodmt', '5meo', 'toad', 'bufo'],
-];
-aliasGroups.forEach(([canon, ...rest]) => rest.forEach(k => { if (tracks[canon]) tracks[k] = tracks[canon]; }));
-
-const state = {
-  mode: 'sober',
-  label: '',
-  startTime: 0,
-  duration: 0,
-  tripMode: 0,
-};
-
-const drugInput = document.getElementById('drug');
-const ingestBtn = document.getElementById('ingest');
-const statusEl = document.getElementById('status');
-const barEl = document.getElementById('bar');
-const titleEl = document.getElementById('player-title');
-const artistEl = document.getElementById('player-artist');
-const artEl = document.getElementById('player-art');
-const playBtn = document.getElementById('player-play');
-
-const audio = new Audio();
-audio.preload = 'none';
-audio.volume = 0.7;
-playBtn.addEventListener('click', () => {
-  if (!audio.src) return;
-  if (audio.paused) audio.play().catch(() => {});
-  else audio.pause();
-});
-audio.addEventListener('play', () => { playBtn.textContent = '⏸'; });
-audio.addEventListener('pause', () => { playBtn.textContent = '▶'; });
-audio.addEventListener('ended', () => { playBtn.textContent = '▶'; });
-
-function loadTrack(key) {
-  const t = tracks[key];
-  if (!t || !t.preview) { clearTrack(); return; }
-  titleEl.textContent = t.title;
-  artistEl.textContent = t.artist;
-  if (t.art) artEl.src = t.art;
-  else artEl.removeAttribute('src');
-  audio.src = t.preview;
-  audio.currentTime = 0;
-  playBtn.disabled = false;
-  audio.play().catch(() => {});
-}
-function clearTrack() {
-  audio.pause();
-  audio.removeAttribute('src');
-  audio.load();
-  titleEl.textContent = '—';
-  artistEl.textContent = 'No track';
-  artEl.removeAttribute('src');
-  playBtn.disabled = true;
-  playBtn.textContent = '▶';
-}
-
-function ingest(rawName) {
-  const name = rawName.trim();
-  if (!name) return;
-  const key = name.toLowerCase();
-  const known = drugs[key];
-  const cfg = known || drugs.unknown;
-  state.mode = known ? key : 'unknown';
-  state.label = name.toUpperCase();
-  state.startTime = performance.now() / 1000;
-  state.duration = cfg.duration;
-  state.tripMode = cfg.tripMode || 0;
-  tripMat.uniforms.uMode.value = state.tripMode;
-  statusEl.textContent = `ON ${state.label}`;
-  setActiveMenu(state.mode);
-  loadTrack(state.mode);
-}
-
-ingestBtn.addEventListener('click', () => ingest(drugInput.value || drugInput.placeholder));
-drugInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') ingest(drugInput.value || drugInput.placeholder);
-});
-
-const menuEl = document.getElementById('menu');
-const menuButtons = new Map();
-function addMenuChip(label, key) {
-  const btn = document.createElement('button');
-  btn.className = 'menu-item';
-  btn.textContent = label;
-  btn.dataset.key = key;
-  btn.addEventListener('click', () => {
-    drugInput.value = label;
-    ingest(label);
-  });
-  menuEl.appendChild(btn);
-  menuButtons.set(key, btn);
-}
-
-const menuItems = [
-  ['LSD', 'lsd'], ['MUSHROOMS', 'mushrooms'], ['DMT', 'dmt'], ['5-MEO-DMT (TOAD)', '5-meo-dmt (toad)'], ['MDMA', 'mdma'],
-  ['KETAMINE', 'ketamine'], ['WEED', 'weed'], ['ALCOHOL', 'alcohol'], ['CAFFEINE', 'caffeine'],
-  ['NICOTINE', 'nicotine'], ['ADDERALL', 'adderall'], ['COCAINE', 'cocaine'],
-  ['METH', 'meth'], ['HEROIN', 'heroin'],
-];
-menuItems.forEach(([label, key]) => addMenuChip(label, key));
-
-function setActiveMenu(key) {
-  menuButtons.forEach((btn, k) => btn.classList.toggle('active', k === key));
-}
-
-// Invent drug modal
-const modal = document.getElementById('modal');
-const inventBtn = document.getElementById('invent');
-const mName = document.getElementById('m-name');
-const mIntensity = document.getElementById('m-intensity');
-const mIntVal = document.getElementById('m-int-val');
-const mDuration = document.getElementById('m-duration');
-const mDurVal = document.getElementById('m-dur-val');
-const mMotion = document.getElementById('m-motion');
-const mPalette = document.getElementById('m-palette');
-const mShader = document.getElementById('m-shader');
-const mSong = document.getElementById('m-song');
-const mStatus = document.getElementById('m-status');
-const mSubmit = document.getElementById('m-submit');
-const mCancel = document.getElementById('m-cancel');
-
-mIntensity.addEventListener('input', () => { mIntVal.textContent = parseFloat(mIntensity.value).toFixed(1); });
-mDuration.addEventListener('input', () => { mDurVal.textContent = `${mDuration.value}s`; });
-
-const motions = {
-  float: (t, i) => {
-    avatar.position.y = Math.sin(t * 1.5) * 0.3 * i;
-    avatar.rotation.y = Math.sin(t * 0.6) * 0.4 * i;
-    head.scale.setScalar(1 + Math.sin(t * 2) * 0.05 * i);
-  },
-  wobble: (t, i) => {
-    avatar.rotation.z = Math.sin(t * 5) * 0.18 * i;
-    avatar.position.x = Math.sin(t * 5) * 0.22 * i;
-    head.rotation.z = Math.sin(t * 3 + 1) * 0.18 * i;
-  },
-  pulse: (t, i) => {
-    const p = Math.sin(t * 6) * 0.18 * i;
-    head.scale.setScalar(1 + p);
-    body.scale.set(1 + p * 0.25, 1, 1 + p * 0.25);
-  },
-  fragment: (t, i) => {
-    avatar.position.x = (Math.random() - 0.5) * 0.2 * i;
-    avatar.position.y = (Math.random() - 0.5) * 0.2 * i;
-    avatar.position.z = (Math.random() - 0.5) * 0.2 * i;
-    head.rotation.y = (Math.random() - 0.5) * 0.5 * i;
-  },
-  jitter: (t, i) => {
-    avatar.position.x = (Math.random() - 0.5) * 0.06 * i;
-    avatar.position.y = (Math.random() - 0.5) * 0.06 * i;
-    head.rotation.y = Math.sin(t * 14) * 0.3 * i;
-    body.scale.set(1 + Math.sin(t * 8) * 0.03 * i, 1, 1);
-  },
-  slump: (t, i) => {
-    head.rotation.x = 0.4 * i;
-    head.rotation.z = -0.12 * i;
-    avatar.position.y = -0.4 * i;
-    avatar.rotation.z = 0.18 * i;
-  },
-  breathe: (t, i) => {
-    const b = Math.sin(t * 0.9) * 0.16 * i;
-    head.scale.setScalar(1 + b);
-    body.scale.set(1 + b * 0.6, 1, 1 + b * 0.6);
-    avatar.rotation.x = Math.sin(t * 0.4) * 0.08 * i;
-  },
-  spin: (t, i) => {
-    avatar.rotation.y = t * 1.6 * i;
-    avatar.position.y = Math.sin(t * 2) * 0.1 * i;
-  },
-  kipup: (t, i) => effects.alcohol(t, i),
-  vanish: (t, i) => effects.ketamine(t, i),
-};
-
-const palettes = {
-  none: () => {},
-  rainbow: (t, i) => {
-    const hue = (t * 0.2) % 1;
-    skin.color.setHSL(hue, 0.6, 0.65);
-    skin.emissive.setHSL(hue, 0.9, 0.22 * i);
-  },
-  warm: (t, i) => {
-    const h = 0.03 + Math.sin(t * 0.5) * 0.04;
-    skin.color.setHSL(h, 0.7, 0.6);
-    skin.emissive.setHSL(0.05, 0.9, 0.22 * i);
-  },
-  cool: (t, i) => {
-    const h = 0.6 + Math.sin(t * 0.5) * 0.06;
-    skin.color.setHSL(h, 0.55, 0.6);
-    skin.emissive.setHSL(0.66, 0.8, 0.18 * i);
-  },
-  neon: (t, i) => {
-    const hue = (t * 0.6) % 1;
-    skin.color.setHSL(hue, 1.0, 0.55);
-    skin.emissive.setHSL(hue, 1.0, 0.45 * i);
-  },
-  monochrome: (t, i) => {
-    skin.color.setHSL(0, 0, 0.55 - 0.25 * i);
-    skin.emissive.setHex(0x000000);
-  },
-};
-
-function buildEffect(cfg) {
-  const motion = motions[cfg.motion] || motions.float;
-  const palette = palettes[cfg.palette] || palettes.none;
-  const k = cfg.intensity;
-  return (t, i) => {
-    const ii = i * k;
-    palette(t, ii);
-    motion(t, ii);
-  };
-}
-
-function openModal() {
-  modal.classList.add('open');
-  mStatus.textContent = '';
-  mStatus.classList.remove('error');
-  setTimeout(() => mName.focus(), 50);
-}
-function closeModal() { modal.classList.remove('open'); }
-
-inventBtn.addEventListener('click', openModal);
-mCancel.addEventListener('click', closeModal);
-modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
-});
-
-async function searchITunes(q) {
-  try {
-    const url = `https://itunes.apple.com/search?term=${encodeURIComponent(q)}&entity=song&limit=1&country=us`;
-    const res = await fetch(url);
-    const data = await res.json();
-    const r = data.results && data.results[0];
-    if (!r || !r.previewUrl) return null;
-    return { title: r.trackName, artist: r.artistName, preview: r.previewUrl, art: r.artworkUrl100 };
-  } catch { return null; }
-}
-
-mSubmit.addEventListener('click', async () => {
-  const name = mName.value.trim();
-  if (!name) {
-    mStatus.textContent = 'NAME REQUIRED';
-    mStatus.classList.add('error');
-    return;
-  }
-  mStatus.classList.remove('error');
-  const songQuery = mSong.value.trim();
-  let track = null;
-  if (songQuery) {
-    mStatus.textContent = 'SEARCHING SONG…';
-    mSubmit.disabled = true;
-    track = await searchITunes(songQuery);
-    mSubmit.disabled = false;
-    if (!track) {
-      mStatus.textContent = 'SONG NOT FOUND — CREATING WITHOUT';
-      mStatus.classList.add('error');
-    }
-  }
-  const key = name.toLowerCase().replace(/[^a-z0-9]+/g, '');
-  if (!key) {
-    mStatus.textContent = 'INVALID NAME';
-    mStatus.classList.add('error');
-    return;
-  }
-  const cfg = {
-    intensity: parseFloat(mIntensity.value),
-    motion: mMotion.value,
-    palette: mPalette.value,
-  };
-  const duration = parseInt(mDuration.value, 10);
-  const tripMode = parseInt(mShader.value, 10);
-  drugs[key] = { duration, tripMode };
-  effects[key] = buildEffect(cfg);
-  if (track) tracks[key] = track;
-  if (!menuButtons.has(key)) addMenuChip(name.toUpperCase(), key);
-  closeModal();
-  mName.value = '';
-  mSong.value = '';
-  mStatus.textContent = '';
-  drugInput.value = name;
-  ingest(name);
-});
+const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
+camera.position.set(0, 5.6, 13.5);
+camera.lookAt(0, 1.5, 0);
 
 function resize() {
-  const w = canvas.clientWidth;
-  const h = canvas.clientHeight;
-  if (!w || !h) return;
+  const w = window.innerWidth, h = window.innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w / h;
   camera.updateProjectionMatrix();
 }
 window.addEventListener('resize', resize);
-requestAnimationFrame(resize);
+resize();
 
-function tick() {
-  requestAnimationFrame(tick);
-  const t = performance.now() / 1000;
-  const elapsed = state.mode !== 'sober' ? t - state.startTime : 0;
-  const progress = state.duration ? Math.min(elapsed / state.duration, 1) : 0;
-  const ramp = progress < 0.2 ? progress / 0.2 : 1 - (progress - 0.2) / 0.8;
-  const intensity = Math.max(0, ramp);
+/* ----- Lighting ----- */
+const ambient = new THREE.AmbientLight(0x4a3a40, 0.5);
+scene.add(ambient);
 
-  head.position.set(0, 2, 0);
-  body.position.set(0, 0.5, 0);
-  head.scale.set(1, 1, 1);
-  body.scale.set(1, 1, 1);
-  head.rotation.set(0, 0, 0);
-  body.rotation.set(0, 0, 0);
-  avatar.rotation.set(0, 0, 0);
-  avatar.position.set(0, 0, 0);
-  avatar.scale.set(1, 1, 1);
-  leftEye.visible = true;
-  rightEye.visible = true;
-  leftEye.scale.set(1, 1, 1);
-  rightEye.scale.set(1, 1, 1);
-  leftEye.position.set(-0.28, 2.12, 0.78);
-  rightEye.position.set(0.28, 2.12, 0.78);
-  skin.color.setHex(0xeeeeee);
-  skin.emissive.setHex(0x000000);
-  eyeMat.color.setHex(0x111111);
+const spot = new THREE.SpotLight(0xfff2c8, 4.5, 40, Math.PI / 4.5, 0.45, 1);
+spot.position.set(0, 14, 2);
+spot.target.position.set(0, 0, 0);
+spot.castShadow = true;
+spot.shadow.mapSize.set(1024, 1024);
+spot.shadow.camera.near = 1;
+spot.shadow.camera.far = 30;
+scene.add(spot);
+scene.add(spot.target);
 
-  const idle = Math.sin(t * 1.2) * 0.015;
-  body.scale.set(1 + idle, 1 - idle * 0.3, 1 + idle);
-  head.position.y = 2 + idle * 0.4;
+const rim = new THREE.DirectionalLight(0x6688aa, 0.6);
+rim.position.set(-5, 4, -5);
+scene.add(rim);
 
-  tripMat.uniforms.uTime.value = t;
-  tripMat.uniforms.uIntensity.value = state.tripMode ? intensity * 0.9 : 0;
+const cornerBlue = new THREE.PointLight(0x2b6cb0, 1.4, 12);
+cornerBlue.position.set(-3.5, 2.8, 3.5);
+scene.add(cornerBlue);
+const cornerRed = new THREE.PointLight(0xc8102e, 1.4, 12);
+cornerRed.position.set(3.5, 2.8, 3.5);
+scene.add(cornerRed);
 
-  const effect = effects[state.mode];
-  if (effect && intensity > 0) effect(t, intensity);
+/* ----- Floor (arena) ----- */
+const floor = new THREE.Mesh(
+  new THREE.CircleGeometry(40, 32),
+  new THREE.MeshStandardMaterial({ color: 0x0a0a10, roughness: 0.95 })
+);
+floor.rotation.x = -Math.PI / 2;
+floor.position.y = -1.1;
+floor.receiveShadow = true;
+scene.add(floor);
 
-  barEl.style.width = `${progress * 100}%`;
+/* ----- Boxing Ring ----- */
+function buildRing() {
+  const ringGroup = new THREE.Group();
 
-  if (progress >= 1 && state.mode !== 'sober') {
-    state.mode = 'sober';
-    state.tripMode = 0;
-    tripMat.uniforms.uMode.value = 0;
-    statusEl.textContent = 'SOBER';
-    setActiveMenu(null);
-    clearTrack();
+  // Apron (skirted base under the mat)
+  const apron = new THREE.Mesh(
+    new THREE.BoxGeometry(9, 1.0, 9),
+    new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 })
+  );
+  apron.position.y = -0.5;
+  apron.receiveShadow = true;
+  apron.castShadow = true;
+  ringGroup.add(apron);
+
+  // Apron stripe (gold trim)
+  const apronTrim = new THREE.Mesh(
+    new THREE.BoxGeometry(9.05, 0.15, 9.05),
+    new THREE.MeshStandardMaterial({ color: 0xd6a737, roughness: 0.5, metalness: 0.4 })
+  );
+  apronTrim.position.y = -0.85;
+  ringGroup.add(apronTrim);
+
+  // Mat (canvas) — slight off-white
+  const mat = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.05, 8),
+    new THREE.MeshStandardMaterial({ color: 0xe8d8ad, roughness: 0.95 })
+  );
+  mat.position.y = 0.02;
+  mat.receiveShadow = true;
+  ringGroup.add(mat);
+
+  // Center logo (a stylized B)
+  const logoCanvas = document.createElement('canvas');
+  logoCanvas.width = 512; logoCanvas.height = 512;
+  const ctx2d = logoCanvas.getContext('2d');
+  ctx2d.fillStyle = '#e8d8ad';
+  ctx2d.fillRect(0, 0, 512, 512);
+  ctx2d.strokeStyle = '#7a1a26';
+  ctx2d.lineWidth = 8;
+  ctx2d.strokeRect(14, 14, 484, 484);
+  ctx2d.fillStyle = '#7a1a26';
+  ctx2d.font = 'bold 200px sans-serif';
+  ctx2d.textAlign = 'center';
+  ctx2d.textBaseline = 'middle';
+  ctx2d.fillText('BoB', 256, 256);
+  ctx2d.font = 'bold 38px sans-serif';
+  ctx2d.fillText('BATTLE OF BELIEFS', 256, 410);
+  const logoTex = new THREE.CanvasTexture(logoCanvas);
+  const logo = new THREE.Mesh(
+    new THREE.PlaneGeometry(4.2, 4.2),
+    new THREE.MeshStandardMaterial({ map: logoTex, transparent: false, roughness: 0.9 })
+  );
+  logo.rotation.x = -Math.PI / 2;
+  logo.position.y = 0.06;
+  ringGroup.add(logo);
+
+  // 4 corner posts
+  const postPositions = [
+    [-3.95, 0, -3.95],
+    [ 3.95, 0, -3.95],
+    [-3.95, 0,  3.95],
+    [ 3.95, 0,  3.95],
+  ];
+  const postColors = [0xc8102e, 0xc8102e, 0x2b6cb0, 0x2b6cb0]; // red corners back, blue corners front
+  postPositions.forEach((p, i) => {
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.14, 0.16, 2.6, 16),
+      new THREE.MeshStandardMaterial({ color: postColors[i], roughness: 0.5, metalness: 0.2 })
+    );
+    post.position.set(p[0], 1.3, p[2]);
+    post.castShadow = true;
+    ringGroup.add(post);
+
+    // Padded turnbuckle
+    const pad = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.5, 0.6),
+      new THREE.MeshStandardMaterial({ color: postColors[i], roughness: 0.8 })
+    );
+    pad.position.set(p[0], 2.0, p[2]);
+    ringGroup.add(pad);
+
+    const cap = new THREE.Mesh(
+      new THREE.SphereGeometry(0.18, 16, 12),
+      new THREE.MeshStandardMaterial({ color: 0xd6a737, roughness: 0.3, metalness: 0.6 })
+    );
+    cap.position.set(p[0], 2.7, p[2]);
+    ringGroup.add(cap);
+  });
+
+  // Ropes — three levels, four sides, two colors alternating
+  const ropeColors = [0xc8102e, 0xffffff, 0x2b6cb0];
+  const ropeHeights = [0.7, 1.3, 1.9];
+  ropeHeights.forEach((h, idx) => {
+    const c = ropeColors[idx];
+    // 4 sides
+    const sides = [
+      { len: 7.9, axis: 'x', pos: [0, h,  3.95] }, // front
+      { len: 7.9, axis: 'x', pos: [0, h, -3.95] }, // back
+      { len: 7.9, axis: 'z', pos: [-3.95, h, 0] }, // left
+      { len: 7.9, axis: 'z', pos: [ 3.95, h, 0] }, // right
+    ];
+    sides.forEach(s => {
+      const rope = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.04, 0.04, s.len, 8),
+        new THREE.MeshStandardMaterial({ color: c, roughness: 0.6 })
+      );
+      if (s.axis === 'x') rope.rotation.z = Math.PI / 2;
+      else rope.rotation.x = Math.PI / 2;
+      rope.position.set(...s.pos);
+      ringGroup.add(rope);
+    });
+  });
+
+  scene.add(ringGroup);
+  return ringGroup;
+}
+buildRing();
+
+/* ----- Brass Bell (the literal ringside bell) ----- */
+let brassBell = null;
+function buildBrassBell() {
+  const root = new THREE.Group();
+
+  // Vertical extension rising from corner-post top
+  const ext = box(0.08, 0.7, 0.08, 0x3a2410, { rough: 0.85 });
+  ext.position.set(0, 0.35, 0);
+  root.add(ext);
+
+  // Horizontal arm extending in +z (toward camera) so the bell hangs in the foreground
+  const arm = box(0.08, 0.08, 0.8, 0x3a2410, { rough: 0.85 });
+  arm.position.set(0, 0.7, 0.4);
+  root.add(arm);
+
+  // Tiny mounting pad at end of arm
+  const pad = box(0.16, 0.06, 0.16, 0x6a4a10, { metal: 0.6, rough: 0.5 });
+  pad.position.set(0, 0.7, 0.8);
+  root.add(pad);
+
+  // Two hanging chains (more authentic than a single chain)
+  const chain1 = cyl(0.018, 0.018, 0.35, 0x222222, { metal: 0.6, rough: 0.4 });
+  chain1.position.set(-0.04, 0.5, 0.8);
+  root.add(chain1);
+  const chain2 = cyl(0.018, 0.018, 0.35, 0x222222, { metal: 0.6, rough: 0.4 });
+  chain2.position.set(0.04, 0.5, 0.8);
+  root.add(chain2);
+
+  // ----- Pivot (the bell itself; rotates around its top when struck) -----
+  const pivot = new THREE.Group();
+  pivot.position.set(0, 0.3, 0.8);
+  root.add(pivot);
+
+  // Yoke / crown cap
+  const yoke = cyl(0.08, 0.16, 0.1, 0xa8761e, { metal: 0.95, rough: 0.18 });
+  yoke.position.y = -0.02;
+  pivot.add(yoke);
+
+  // Bell body — truncated cone, brass
+  const bellGeo = new THREE.CylinderGeometry(0.18, 0.42, 0.6, 28, 4, true);
+  const bellMat = new THREE.MeshStandardMaterial({
+    color: 0xe2b54a, metalness: 0.95, roughness: 0.18, side: THREE.DoubleSide,
+  });
+  const body = new THREE.Mesh(bellGeo, bellMat);
+  body.position.y = -0.36;
+  body.castShadow = true;
+  pivot.add(body);
+
+  // Decorative bands
+  const band1 = new THREE.Mesh(
+    new THREE.TorusGeometry(0.24, 0.022, 8, 28),
+    new THREE.MeshStandardMaterial({ color: 0x6a4a10, metalness: 0.85, roughness: 0.35 })
+  );
+  band1.rotation.x = Math.PI / 2;
+  band1.position.y = -0.18;
+  pivot.add(band1);
+
+  const band2 = new THREE.Mesh(
+    new THREE.TorusGeometry(0.36, 0.025, 8, 28),
+    new THREE.MeshStandardMaterial({ color: 0x6a4a10, metalness: 0.85, roughness: 0.35 })
+  );
+  band2.rotation.x = Math.PI / 2;
+  band2.position.y = -0.5;
+  pivot.add(band2);
+
+  // Flared bottom rim
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(0.42, 0.04, 10, 32),
+    new THREE.MeshStandardMaterial({ color: 0xb8861a, metalness: 0.95, roughness: 0.22 })
+  );
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = -0.66;
+  pivot.add(rim);
+
+  // Shadow disc inside the bell mouth (dark interior)
+  const inside = new THREE.Mesh(
+    new THREE.CircleGeometry(0.38, 24),
+    new THREE.MeshStandardMaterial({ color: 0x1a0a02, roughness: 1, side: THREE.DoubleSide })
+  );
+  inside.rotation.x = Math.PI / 2;
+  inside.position.y = -0.64;
+  pivot.add(inside);
+
+  // Clapper rope and ball (will be visible peeking out the mouth)
+  const clapperRope = cyl(0.01, 0.01, 0.55, 0x111111);
+  clapperRope.position.y = -0.36;
+  pivot.add(clapperRope);
+
+  const clapperBall = sphere(0.09, 0x3a2a10, { metal: 0.7, rough: 0.4 });
+  clapperBall.position.y = -0.64;
+  pivot.add(clapperBall);
+
+  // Position root at top of front-right blue corner post
+  root.position.set(3.95, 2.6, 3.95);
+
+  scene.add(root);
+  return { root, pivot, clapperBall };
+}
+brassBell = buildBrassBell();
+
+// Swing state
+let bellSwingEnergy = 0;
+let bellSwingTime = 0;
+function triggerBellSwing(strength = 1) {
+  bellSwingEnergy = Math.max(bellSwingEnergy, strength);
+  bellSwingTime = 0;
+}
+
+/* ----- Audience ----- */
+function buildAudience() {
+  const audience = new THREE.Group();
+  const headGeo = new THREE.SphereGeometry(0.22, 8, 6);
+  const palette = [0xa05a3a, 0x8b6e4e, 0xd9b58a, 0x6a4a35, 0xf2cfa6, 0x4a3525];
+  // ring of seats
+  for (let ring = 0; ring < 5; ring++) {
+    const radius = 8 + ring * 1.4;
+    const count = 24 + ring * 8;
+    const y = -0.4 + ring * 0.35;
+    for (let i = 0; i < count; i++) {
+      const a = (i / count) * Math.PI * 2 + ring * 0.13;
+      const x = Math.cos(a) * radius;
+      const z = Math.sin(a) * radius;
+      const head = new THREE.Mesh(
+        headGeo,
+        new THREE.MeshStandardMaterial({
+          color: palette[Math.floor(Math.random() * palette.length)],
+          roughness: 0.9,
+        })
+      );
+      head.position.set(x, y, z);
+      head.userData.basePhase = Math.random() * Math.PI * 2;
+      head.userData.baseY = y;
+      audience.add(head);
+    }
   }
+  scene.add(audience);
+  return audience;
+}
+const audience = buildAudience();
+
+/* ============================================================
+   FIGHTER FACTORY
+   ============================================================ */
+function box(w, h, d, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+    transparent: opts.transparent || false, opacity: opts.opacity ?? 1,
+  });
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.castShadow = true;
+  return m;
+}
+function sphere(r, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+  });
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), mat);
+  m.castShadow = true;
+  return m;
+}
+function cyl(rt, rb, h, color, opts = {}) {
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.rough ?? 0.7, metalness: opts.metal ?? 0.05,
+  });
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 16), mat);
+  m.castShadow = true;
+  return m;
+}
+
+function buildHeadProp(kind, color, accent) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'mitre': {
+      // tall white pointed hat
+      const hat = new THREE.Mesh(
+        new THREE.ConeGeometry(0.32, 0.85, 4),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.8 })
+      );
+      hat.rotation.y = Math.PI / 4;
+      hat.position.y = 0.42;
+      hat.castShadow = true;
+      g.add(hat);
+      // gold band
+      const band = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.34, 0.34, 0.08, 16),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.4, metalness: 0.6 })
+      );
+      band.position.y = 0.06;
+      g.add(band);
+      // cross on top
+      const c1 = box(0.04, 0.18, 0.04, accent, { metal: 0.6 });
+      c1.position.y = 0.95;
+      g.add(c1);
+      const c2 = box(0.12, 0.04, 0.04, accent, { metal: 0.6 });
+      c2.position.y = 0.92;
+      g.add(c2);
+      break;
+    }
+    case 'tabs': {
+      // Geneva preaching tabs - small white rectangles at neck, no hat (just hair)
+      const hair = box(0.5, 0.18, 0.42, 0x1a0e0e, { rough: 0.95 });
+      hair.position.y = 0.05;
+      g.add(hair);
+      break;
+    }
+    case 'blackhat': {
+      const brim = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.45, 0.45, 0.04, 24),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 })
+      );
+      brim.position.y = 0.08;
+      g.add(brim);
+      const crown = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 0.3, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.85 })
+      );
+      crown.position.y = 0.25;
+      g.add(crown);
+      // payot (sideburn curls)
+      const payL = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
+      payL.position.set(-0.28, -0.18, 0.05);
+      g.add(payL);
+      const payR = cyl(0.04, 0.04, 0.32, 0x1a1410, { rough: 1 });
+      payR.position.set(0.28, -0.18, 0.05);
+      g.add(payR);
+      break;
+    }
+    case 'turban': {
+      const t = new THREE.Mesh(
+        new THREE.TorusGeometry(0.3, 0.16, 12, 24),
+        new THREE.MeshStandardMaterial({ color: color, roughness: 0.85 })
+      );
+      t.rotation.x = Math.PI / 2;
+      t.position.y = 0.1;
+      g.add(t);
+      const top = sphere(0.28, color, { rough: 0.85 });
+      top.position.y = 0.22;
+      g.add(top);
+      const stripe = new THREE.Mesh(
+        new THREE.TorusGeometry(0.31, 0.04, 8, 24),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.6 })
+      );
+      stripe.rotation.x = Math.PI / 2;
+      stripe.position.y = 0.16;
+      g.add(stripe);
+      break;
+    }
+    case 'mukhpatti': {
+      // Jain monk: bald, mouth cloth (added at face level)
+      const cloth = box(0.42, 0.16, 0.04, color);
+      cloth.position.set(0, -0.18, 0.26);
+      g.add(cloth);
+      // tie strings
+      const t1 = cyl(0.01, 0.01, 0.45, color);
+      t1.position.set(-0.18, -0.05, 0.18);
+      t1.rotation.z = 0.4;
+      g.add(t1);
+      const t2 = cyl(0.01, 0.01, 0.45, color);
+      t2.position.set(0.18, -0.05, 0.18);
+      t2.rotation.z = -0.4;
+      g.add(t2);
+      break;
+    }
+    case 'crown': {
+      const base = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.32, 0.32, 0.16, 16),
+        new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+      );
+      base.position.y = 0.12;
+      g.add(base);
+      // 5 spikes
+      for (let i = 0; i < 5; i++) {
+        const a = (i / 5) * Math.PI * 2;
+        const spk = new THREE.Mesh(
+          new THREE.ConeGeometry(0.06, 0.22, 6),
+          new THREE.MeshStandardMaterial({ color: accent, roughness: 0.3, metalness: 0.7 })
+        );
+        spk.position.set(Math.cos(a) * 0.28, 0.28, Math.sin(a) * 0.28);
+        g.add(spk);
+      }
+      // jewel
+      const j = sphere(0.07, 0xff3344, { rough: 0.2, metal: 0.4 });
+      j.position.set(0, 0.14, 0.32);
+      g.add(j);
+      // tilak (forehead mark)
+      const tilak = box(0.05, 0.08, 0.02, 0xc8102e);
+      tilak.position.set(0, -0.05, 0.27);
+      g.add(tilak);
+      break;
+    }
+    case 'topknot': {
+      // bun on top + hair around
+      const hair = box(0.48, 0.18, 0.4, 0xd6d6c8, { rough: 1 });
+      hair.position.y = 0.04;
+      g.add(hair);
+      const bun = sphere(0.14, 0xd6d6c8, { rough: 1 });
+      bun.position.y = 0.22;
+      g.add(bun);
+      const stick = cyl(0.02, 0.02, 0.18, 0x8b5a2b);
+      stick.position.y = 0.24;
+      stick.rotation.z = Math.PI / 2;
+      g.add(stick);
+      break;
+    }
+    case 'slick': {
+      const hair = box(0.46, 0.14, 0.4, 0x100a05, { rough: 0.4, metal: 0.2 });
+      hair.position.y = 0.06;
+      g.add(hair);
+      // a clean part
+      const part = box(0.42, 0.02, 0.06, 0xf2cfa6);
+      part.position.set(0.06, 0.13, 0);
+      part.rotation.y = -0.1;
+      g.add(part);
+      break;
+    }
+    case 'tinfoil': {
+      // crumpled silver hat
+      const h = sphere(0.34, 0xcccccc, { rough: 0.2, metal: 0.9 });
+      h.scale.set(1, 0.7, 1);
+      h.position.y = 0.12;
+      g.add(h);
+      // little crinkles
+      for (let i = 0; i < 6; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const r = 0.28;
+        const dot = sphere(0.05, 0xa8a8a8, { metal: 0.9, rough: 0.3 });
+        dot.position.set(Math.cos(a) * r, 0.16 + Math.random() * 0.08, Math.sin(a) * r);
+        g.add(dot);
+      }
+      // antenna
+      const ant = cyl(0.02, 0.02, 0.5, 0x888888, { metal: 0.9, rough: 0.2 });
+      ant.position.set(0.18, 0.42, 0);
+      ant.rotation.z = -0.25;
+      g.add(ant);
+      const ball = sphere(0.05, accent, { metal: 0.5, rough: 0.3 });
+      ball.position.set(0.3, 0.65, 0);
+      g.add(ball);
+      break;
+    }
+    case 'einstein': {
+      const hairColor = 0xeeeeee;
+      // wild puff
+      for (let i = 0; i < 14; i++) {
+        const tuft = sphere(0.11 + Math.random() * 0.05, hairColor, { rough: 1 });
+        const a = (i / 14) * Math.PI * 2;
+        tuft.position.set(Math.cos(a) * 0.24, 0.14 + Math.random() * 0.1, Math.sin(a) * 0.24);
+        g.add(tuft);
+      }
+      const top = sphere(0.18, hairColor, { rough: 1 });
+      top.position.y = 0.22;
+      g.add(top);
+      // goggles
+      const lensL = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
+      lensL.position.set(-0.11, -0.05, 0.24);
+      g.add(lensL);
+      const lensR = sphere(0.07, 0x88c8ff, { metal: 0.4, rough: 0.2 });
+      lensR.position.set(0.11, -0.05, 0.24);
+      g.add(lensR);
+      const strap = box(0.5, 0.04, 0.04, 0x222222);
+      strap.position.set(0, -0.05, 0.18);
+      g.add(strap);
+      break;
+    }
+    case 'bald': {
+      // shiny bald head (no hat)
+      break;
+    }
+    case 'vr': {
+      const hs = box(0.5, 0.2, 0.3, 0x111122, { rough: 0.3, metal: 0.4 });
+      hs.position.set(0, -0.02, 0.18);
+      g.add(hs);
+      const lens = box(0.4, 0.14, 0.02, accent, { metal: 0.7, rough: 0.15 });
+      lens.position.set(0, -0.02, 0.34);
+      g.add(lens);
+      const strap = box(0.5, 0.06, 0.5, 0x222244, { rough: 0.6 });
+      strap.position.set(0, -0.02, 0);
+      g.add(strap);
+      // glowy LED dot
+      const led = sphere(0.025, accent, { metal: 0.5 });
+      led.position.set(0.16, 0.05, 0.36);
+      g.add(led);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildFacial(kind) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'fullbeard': {
+      const beard = box(0.44, 0.35, 0.18, 0x1a1410, { rough: 1 });
+      beard.position.set(0, -0.22, 0.18);
+      g.add(beard);
+      break;
+    }
+    case 'shortbeard': {
+      const beard = box(0.42, 0.18, 0.14, 0x1a1410, { rough: 1 });
+      beard.position.set(0, -0.22, 0.2);
+      g.add(beard);
+      break;
+    }
+    case 'longbeard': {
+      const beard = box(0.34, 0.5, 0.14, 0xe8e8e0, { rough: 1 });
+      beard.position.set(0, -0.36, 0.2);
+      g.add(beard);
+      break;
+    }
+    case 'wildhair': {
+      const stache = box(0.3, 0.06, 0.08, 0xeeeeee, { rough: 1 });
+      stache.position.set(0, -0.16, 0.24);
+      g.add(stache);
+      break;
+    }
+    case 'glasses': {
+      const lensL = new THREE.Mesh(
+        new THREE.RingGeometry(0.06, 0.09, 16),
+        new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4 })
+      );
+      lensL.position.set(-0.12, -0.05, 0.26);
+      g.add(lensL);
+      const lensR = lensL.clone();
+      lensR.position.set(0.12, -0.05, 0.26);
+      g.add(lensR);
+      const bridge = box(0.08, 0.02, 0.02, 0x111111);
+      bridge.position.set(0, -0.05, 0.26);
+      g.add(bridge);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildEmblem(kind, color) {
+  const g = new THREE.Group();
+  switch (kind) {
+    case 'cross': {
+      const v = box(0.08, 0.42, 0.04, color, { metal: 0.6 });
+      v.position.z = 0.21;
+      g.add(v);
+      const h = box(0.26, 0.08, 0.04, color, { metal: 0.6 });
+      h.position.set(0, 0.05, 0.21);
+      g.add(h);
+      break;
+    }
+    case 'book': {
+      const b = box(0.34, 0.42, 0.08, 0x2a0a0a, { rough: 0.6 });
+      b.position.z = 0.22;
+      g.add(b);
+      const pg = box(0.32, 0.4, 0.02, 0xf4f4f4);
+      pg.position.z = 0.27;
+      g.add(pg);
+      // cross on cover
+      const c = box(0.04, 0.16, 0.005, 0xd6a737, { metal: 0.6 });
+      c.position.z = 0.28;
+      g.add(c);
+      break;
+    }
+    case 'tallit': {
+      // Vertical stripes on torso
+      const s1 = box(0.04, 0.5, 0.04, 0x2b6cb0);
+      s1.position.set(-0.1, 0, 0.21);
+      g.add(s1);
+      const s2 = box(0.04, 0.5, 0.04, 0x2b6cb0);
+      s2.position.set(0.1, 0, 0.21);
+      g.add(s2);
+      break;
+    }
+    case 'crescent': {
+      const moon = new THREE.Mesh(
+        new THREE.TorusGeometry(0.14, 0.04, 8, 16, Math.PI * 1.2),
+        new THREE.MeshStandardMaterial({ color: 0xd6a737, metalness: 0.6, roughness: 0.3 })
+      );
+      moon.position.set(0, 0.05, 0.22);
+      moon.rotation.z = -0.4;
+      g.add(moon);
+      const star = new THREE.Mesh(
+        new THREE.OctahedronGeometry(0.05),
+        new THREE.MeshStandardMaterial({ color: 0xd6a737, metalness: 0.6, roughness: 0.3 })
+      );
+      star.position.set(0.16, 0.05, 0.22);
+      g.add(star);
+      break;
+    }
+    case 'broom': {
+      // Tiny ahimsa broom slung on side
+      const handle = cyl(0.02, 0.02, 0.5, 0x8b5a2b);
+      handle.position.set(0.3, -0.1, 0.18);
+      handle.rotation.z = -0.4;
+      g.add(handle);
+      const tuft = box(0.1, 0.16, 0.06, 0xeeeeee, { rough: 1 });
+      tuft.position.set(0.42, -0.32, 0.18);
+      g.add(tuft);
+      break;
+    }
+    case 'omarms': {
+      // Two extra static arms with a lotus and a sword
+      const armL = box(0.1, 0.42, 0.1, 0x6a7eb8);
+      armL.position.set(-0.45, -0.1, 0.0);
+      armL.rotation.z = 0.45;
+      g.add(armL);
+      const lotus = sphere(0.08, 0xff8aa8, { rough: 0.5 });
+      lotus.position.set(-0.65, -0.32, 0);
+      g.add(lotus);
+
+      const armR = box(0.1, 0.42, 0.1, 0x6a7eb8);
+      armR.position.set(0.45, -0.1, 0.0);
+      armR.rotation.z = -0.45;
+      g.add(armR);
+      const sword = box(0.05, 0.36, 0.05, 0xcccccc, { metal: 0.7, rough: 0.2 });
+      sword.position.set(0.65, -0.32, 0);
+      g.add(sword);
+
+      // Om symbol on chest
+      const om = sphere(0.12, 0xd6a737, { metal: 0.6, rough: 0.3 });
+      om.position.set(0, 0.05, 0.22);
+      om.scale.set(1, 1, 0.3);
+      g.add(om);
+      break;
+    }
+    case 'yinyang': {
+      const disc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 32),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+      );
+      disc.position.z = 0.22;
+      g.add(disc);
+      const halfDark = new THREE.Mesh(
+        new THREE.CircleGeometry(0.16, 32, 0, Math.PI),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 })
+      );
+      halfDark.position.z = 0.221;
+      g.add(halfDark);
+      const dotW = new THREE.Mesh(
+        new THREE.CircleGeometry(0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.5 })
+      );
+      dotW.position.set(0, 0.08, 0.222);
+      g.add(dotW);
+      const dotB = new THREE.Mesh(
+        new THREE.CircleGeometry(0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.5 })
+      );
+      dotB.position.set(0, -0.08, 0.222);
+      g.add(dotB);
+      break;
+    }
+    case 'nametag': {
+      const tag = box(0.32, 0.1, 0.02, 0x111111);
+      tag.position.set(0.18, 0.15, 0.22);
+      g.add(tag);
+      const tagText = box(0.28, 0.06, 0.005, 0xffffff);
+      tagText.position.set(0.18, 0.15, 0.235);
+      g.add(tagText);
+      // tie
+      const tie = box(0.08, 0.42, 0.04, 0x1a1a1a);
+      tie.position.set(0, 0.0, 0.22);
+      g.add(tie);
+      break;
+    }
+    case 'emeter': {
+      // Two soup-can shapes on a belt
+      const canL = cyl(0.06, 0.06, 0.18, 0xc0c4d6, { metal: 0.8, rough: 0.2 });
+      canL.position.set(-0.22, -0.05, 0.22);
+      g.add(canL);
+      const canR = cyl(0.06, 0.06, 0.18, 0xc0c4d6, { metal: 0.8, rough: 0.2 });
+      canR.position.set(0.22, -0.05, 0.22);
+      g.add(canR);
+      // dial in middle
+      const dial = sphere(0.07, 0x222244, { metal: 0.6 });
+      dial.position.set(0, -0.05, 0.22);
+      g.add(dial);
+      // wires
+      const w1 = cyl(0.01, 0.01, 0.26, 0x222222);
+      w1.position.set(-0.11, -0.05, 0.22);
+      w1.rotation.z = Math.PI / 2;
+      g.add(w1);
+      const w2 = cyl(0.01, 0.01, 0.26, 0x222222);
+      w2.position.set(0.11, -0.05, 0.22);
+      w2.rotation.z = Math.PI / 2;
+      g.add(w2);
+      break;
+    }
+    case 'saucer': {
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.16, 0.18, 0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0xa8a8a8, metalness: 0.7, roughness: 0.3 })
+      );
+      disc.position.set(0, 0.06, 0.22);
+      g.add(disc);
+      const dome = sphere(0.07, 0x6affd6, { metal: 0.4, rough: 0.2 });
+      dome.position.set(0, 0.1, 0.22);
+      g.add(dome);
+      break;
+    }
+    case 'beaker': {
+      const flask = cyl(0.08, 0.12, 0.22, 0x88c8ff, { rough: 0.1, metal: 0.1 });
+      flask.position.set(0, 0.0, 0.24);
+      g.add(flask);
+      const liquid = cyl(0.08, 0.11, 0.1, 0x44dd66, { rough: 0.2 });
+      liquid.position.set(0, -0.04, 0.24);
+      g.add(liquid);
+      // bubble
+      const bub = sphere(0.04, 0x44dd66, { rough: 0.2 });
+      bub.position.set(0.04, 0.08, 0.26);
+      g.add(bub);
+      break;
+    }
+    case 'redA': {
+      // A inside a circle (atheist symbol)
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.16, 0.025, 8, 24),
+        new THREE.MeshStandardMaterial({ color: 0xc8102e, roughness: 0.5 })
+      );
+      ring.position.z = 0.22;
+      g.add(ring);
+      const a1 = box(0.04, 0.22, 0.02, 0xc8102e);
+      a1.position.set(-0.05, 0, 0.22);
+      a1.rotation.z = 0.3;
+      g.add(a1);
+      const a2 = box(0.04, 0.22, 0.02, 0xc8102e);
+      a2.position.set(0.05, 0, 0.22);
+      a2.rotation.z = -0.3;
+      g.add(a2);
+      const cross = box(0.18, 0.03, 0.02, 0xc8102e);
+      cross.position.set(0, -0.02, 0.22);
+      g.add(cross);
+      break;
+    }
+    case 'circuit': {
+      // Glowing geometric pattern on chest
+      const c1 = box(0.18, 0.04, 0.01, 0x6affd6, { metal: 0.5 });
+      c1.position.set(0, 0.08, 0.22);
+      g.add(c1);
+      const c2 = box(0.04, 0.18, 0.01, 0x6affd6, { metal: 0.5 });
+      c2.position.set(0.12, 0, 0.22);
+      g.add(c2);
+      const c3 = box(0.18, 0.04, 0.01, 0x6affd6, { metal: 0.5 });
+      c3.position.set(0, -0.08, 0.22);
+      g.add(c3);
+      const node = sphere(0.04, 0x6affd6, { metal: 0.5 });
+      node.position.set(0, 0, 0.23);
+      g.add(node);
+      break;
+    }
+  }
+  return g;
+}
+
+function buildFighter(belief, side /* -1 left, +1 right */) {
+  const def = FIGHTERS[belief];
+  const group = new THREE.Group();
+
+  // Hip pivot (root)
+  const hips = box(0.5, 0.14, 0.32, def.shorts);
+  hips.position.y = 1.1;
+  group.add(hips);
+
+  // Trunks (waist line)
+  const waist = box(0.56, 0.18, 0.36, def.shorts);
+  waist.position.y = 0.95;
+  group.add(waist);
+
+  // Legs
+  function makeLeg(xOffset) {
+    const leg = new THREE.Group();
+    const thigh = box(0.18, 0.45, 0.18, def.shorts);
+    thigh.position.y = -0.22;
+    leg.add(thigh);
+    const knee = sphere(0.1, def.skin);
+    knee.position.y = -0.45;
+    leg.add(knee);
+    const shin = box(0.16, 0.45, 0.16, def.skin);
+    shin.position.y = -0.7;
+    leg.add(shin);
+    const boot = box(0.22, 0.16, 0.34, 0x111111, { rough: 0.6 });
+    boot.position.set(0, -0.96, 0.04);
+    leg.add(boot);
+    leg.position.set(xOffset, 0.85, 0);
+    group.add(leg);
+    return leg;
+  }
+  const legL = makeLeg(-0.13);
+  const legR = makeLeg(0.13);
+
+  // Torso
+  const torso = box(0.62, 0.7, 0.4, def.robe);
+  torso.position.y = 1.5;
+  group.add(torso);
+
+  // Trim line at top of trunks
+  const trimLine = box(0.66, 0.04, 0.42, def.accent, { metal: 0.3 });
+  trimLine.position.y = 1.17;
+  group.add(trimLine);
+
+  // Emblem on chest
+  const emblem = buildEmblem(def.emblem, def.accent);
+  emblem.position.y = 1.5;
+  group.add(emblem);
+
+  // Neck
+  const neck = cyl(0.09, 0.1, 0.14, def.skin);
+  neck.position.y = 1.92;
+  group.add(neck);
+
+  // Head
+  const headGroup = new THREE.Group();
+  headGroup.position.y = 2.15;
+  group.add(headGroup);
+
+  const head = box(0.44, 0.46, 0.4, def.skin);
+  headGroup.add(head);
+
+  // Eyes
+  const eyeL = sphere(0.05, 0xffffff);
+  eyeL.position.set(-0.1, 0.05, 0.21);
+  headGroup.add(eyeL);
+  const eyeR = sphere(0.05, 0xffffff);
+  eyeR.position.set(0.1, 0.05, 0.21);
+  headGroup.add(eyeR);
+  const pupilL = sphere(0.025, 0x111111);
+  pupilL.position.set(-0.1, 0.05, 0.245);
+  headGroup.add(pupilL);
+  const pupilR = sphere(0.025, 0x111111);
+  pupilR.position.set(0.1, 0.05, 0.245);
+  headGroup.add(pupilR);
+
+  // Mouth
+  const mouth = box(0.18, 0.025, 0.02, 0x4a2418);
+  mouth.position.set(0, -0.13, 0.22);
+  headGroup.add(mouth);
+
+  // Facial features
+  const facial = buildFacial(def.facial);
+  headGroup.add(facial);
+
+  // Head prop
+  const headProp = buildHeadProp(def.head, def.robe, def.accent);
+  headProp.position.y = 0.3;
+  headGroup.add(headProp);
+
+  // Arms — these are pivoted at the shoulder for animation
+  function makeArm(xOffset) {
+    const arm = new THREE.Group();
+    arm.position.set(xOffset, 1.78, 0);
+
+    const upper = box(0.18, 0.42, 0.18, def.robe);
+    upper.position.y = -0.21;
+    arm.add(upper);
+
+    const elbow = sphere(0.11, def.skin);
+    elbow.position.y = -0.42;
+    arm.add(elbow);
+
+    const forearm = box(0.16, 0.38, 0.16, def.skin);
+    forearm.position.y = -0.62;
+    arm.add(forearm);
+
+    const glove = sphere(0.18, 0xc8102e, { rough: 0.6 });
+    glove.position.y = -0.86;
+    arm.add(glove);
+
+    return arm;
+  }
+  const armL = makeArm(-0.4);
+  const armR = makeArm(0.4);
+  group.add(armL);
+  group.add(armR);
+
+  // Place + face center
+  group.position.set(side * 1.8, 0, 0);
+  group.rotation.y = side > 0 ? -Math.PI / 2 : Math.PI / 2;
+
+  return {
+    group, hips, torso, headGroup, armL, armR, legL, legR,
+    side, belief,
+    // Animation state
+    state: 'idle',
+    stateTimer: 0,
+    hp: 100,
+    bobPhase: Math.random() * Math.PI * 2,
+    facing: side > 0 ? -Math.PI / 2 : Math.PI / 2,
+  };
+}
+
+/* ============================================================
+   RING GIRL
+   ============================================================ */
+let ringGirl = null;
+function buildRingGirl() {
+  const g = new THREE.Group();
+
+  // Legs
+  const leg1 = box(0.16, 0.7, 0.16, 0xf2cfa6);
+  leg1.position.set(-0.08, 0.5, 0);
+  g.add(leg1);
+  const leg2 = box(0.16, 0.7, 0.16, 0xf2cfa6);
+  leg2.position.set(0.08, 0.5, 0);
+  g.add(leg2);
+  const shoe1 = box(0.2, 0.08, 0.28, 0xc8102e);
+  shoe1.position.set(-0.08, 0.12, 0.04);
+  g.add(shoe1);
+  const shoe2 = box(0.2, 0.08, 0.28, 0xc8102e);
+  shoe2.position.set(0.08, 0.12, 0.04);
+  g.add(shoe2);
+
+  // Dress
+  const dress = box(0.55, 0.7, 0.36, 0xd6a737);
+  dress.position.set(0, 1.1, 0);
+  g.add(dress);
+  const trim = box(0.6, 0.04, 0.4, 0xffffff);
+  trim.position.set(0, 0.76, 0);
+  g.add(trim);
+
+  // Torso top
+  const top = box(0.42, 0.4, 0.3, 0xc8102e);
+  top.position.set(0, 1.65, 0);
+  g.add(top);
+  const sash = box(0.46, 0.08, 0.34, 0xffffff);
+  sash.position.set(0, 1.5, 0);
+  g.add(sash);
+
+  // Neck/head
+  const neck = cyl(0.08, 0.1, 0.12, 0xf2cfa6);
+  neck.position.set(0, 1.95, 0);
+  g.add(neck);
+
+  const head = new THREE.Group();
+  head.position.set(0, 2.18, 0);
+  const headBox = box(0.42, 0.44, 0.38, 0xf2cfa6);
+  head.add(headBox);
+  // hair (cascading)
+  const hair = box(0.5, 0.5, 0.4, 0x8b4a25);
+  hair.position.set(0, 0.05, -0.05);
+  head.add(hair);
+  // bow
+  const bow = box(0.18, 0.1, 0.06, 0xc8102e);
+  bow.position.set(0.18, 0.18, 0.0);
+  head.add(bow);
+  // eyes
+  const e1 = sphere(0.04, 0x111111);
+  e1.position.set(-0.09, 0.02, 0.2);
+  head.add(e1);
+  const e2 = sphere(0.04, 0x111111);
+  e2.position.set(0.09, 0.02, 0.2);
+  head.add(e2);
+  // lips
+  const lips = box(0.14, 0.025, 0.02, 0xc8102e);
+  lips.position.set(0, -0.13, 0.2);
+  head.add(lips);
+  g.add(head);
+
+  // Arms (one will hold up the card)
+  const armL = new THREE.Group();
+  armL.position.set(-0.24, 1.78, 0);
+  const upL = box(0.12, 0.42, 0.12, 0xf2cfa6);
+  upL.position.y = -0.21;
+  armL.add(upL);
+  const foL = box(0.1, 0.4, 0.1, 0xf2cfa6);
+  foL.position.y = -0.6;
+  armL.add(foL);
+  g.add(armL);
+
+  const armR = new THREE.Group();
+  armR.position.set(0.24, 1.78, 0);
+  const upR = box(0.12, 0.42, 0.12, 0xf2cfa6);
+  upR.position.y = -0.21;
+  armR.add(upR);
+  const foR = box(0.1, 0.4, 0.1, 0xf2cfa6);
+  foR.position.y = -0.6;
+  armR.add(foR);
+  g.add(armR);
+
+  // Card (held above head when raised)
+  const card = new THREE.Group();
+  const cardBack = box(1.4, 0.96, 0.06, 0xfff7df);
+  card.add(cardBack);
+  const cardBorder = box(1.42, 0.04, 0.08, 0xc8102e);
+  cardBorder.position.y = 0.48;
+  card.add(cardBorder);
+  // "1" or text would be on a canvas texture; here we just show a stylized card
+  const cardCanvas = document.createElement('canvas');
+  cardCanvas.width = 512; cardCanvas.height = 360;
+  const cctx = cardCanvas.getContext('2d');
+  cctx.fillStyle = '#fff7df';
+  cctx.fillRect(0, 0, 512, 360);
+  cctx.strokeStyle = '#1a1a1a';
+  cctx.lineWidth = 8;
+  cctx.strokeRect(8, 8, 496, 344);
+  cctx.fillStyle = '#c8102e';
+  cctx.font = 'bold 64px sans-serif';
+  cctx.textAlign = 'center';
+  cctx.fillText('VERDICT', 256, 90);
+  cctx.fillStyle = '#1a1a1a';
+  cctx.font = 'bold 110px serif';
+  cctx.fillText('K.O.', 256, 220);
+  cctx.font = '28px sans-serif';
+  cctx.fillStyle = '#888';
+  cctx.fillText('SEE NOTECARD', 256, 300);
+  const cardTex = new THREE.CanvasTexture(cardCanvas);
+  const cardFace = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.36, 0.92),
+    new THREE.MeshStandardMaterial({ map: cardTex, roughness: 0.85 })
+  );
+  cardFace.position.z = 0.04;
+  card.add(cardFace);
+
+  // Card starts in her right hand, lowered
+  card.position.set(0.4, 1.5, 0);
+  g.add(card);
+
+  g.position.set(0, 0, 6); // far behind ring initially
+  g.scale.set(0.95, 0.95, 0.95);
+  g.visible = false;
+
+  scene.add(g);
+  return { group: g, head, armL, armR, card };
+}
+ringGirl = buildRingGirl();
+
+/* ============================================================
+   ANIMATION / BOUT LOGIC
+   ============================================================ */
+const clock = new THREE.Clock();
+let fighters = []; // [fighter1, fighter2]
+let bout = null;   // { startTime, endTime, winner, loser, move, quip, events: [...] }
+
+// Animation state per fighter:
+//   'idle' (bouncing), 'jab' (quick left punch), 'cross' (right punch),
+//   'hook' (looping side punch), 'block' (arms up), 'stagger' (rocked back),
+//   'ko' (lying on the mat), 'victory' (arms up celebrating)
+
+function setFighterState(f, state, opts = {}) {
+  f.state = state;
+  f.stateTimer = 0;
+  f.stateOpts = opts;
+}
+
+function updateFighter(f, t, dt) {
+  const g = f.group;
+  const phase = t * 4 + f.bobPhase;
+
+  // Default arm rest positions (relative to shoulder)
+  const restL = { rx: 1.4, rz: 0.3 };
+  const restR = { rx: 1.4, rz: -0.3 };
+
+  let targetArmL = { ...restL };
+  let targetArmR = { ...restR };
+  let bodyTilt = 0;
+  let bobY = 0;
+  let bodyZ = 0;
+  let bodyRot = 0;
+
+  switch (f.state) {
+    case 'idle': {
+      // Bounce + sway
+      bobY = Math.sin(phase) * 0.04;
+      bodyTilt = Math.sin(phase * 0.5) * 0.03;
+      // Guard up slightly
+      targetArmL = { rx: 1.1, rz: 0.5 };
+      targetArmR = { rx: 1.1, rz: -0.5 };
+      break;
+    }
+    case 'jab': {
+      // Quick left punch forward (toward opponent = -z in local space since they face -z)
+      const t0 = f.stateTimer / 0.3;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmL = { rx: -0.2 - extend * 1.0, rz: 0.1 };
+      targetArmR = { rx: 1.1, rz: -0.5 };
+      bodyZ = -extend * 0.15;
+      if (f.stateTimer > 0.35) setFighterState(f, 'idle');
+      break;
+    }
+    case 'cross': {
+      const t0 = f.stateTimer / 0.35;
+      const e = t0 < 0.35 ? t0 / 0.35 : 1 - (t0 - 0.35) / 0.65;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmR = { rx: -0.2 - extend * 1.0, rz: -0.05 };
+      targetArmL = { rx: 1.0, rz: 0.4 };
+      bodyZ = -extend * 0.2;
+      bodyRot = extend * 0.15;
+      if (f.stateTimer > 0.45) setFighterState(f, 'idle');
+      break;
+    }
+    case 'hook': {
+      const t0 = f.stateTimer / 0.4;
+      const e = t0 < 0.4 ? t0 / 0.4 : 1 - (t0 - 0.4) / 0.6;
+      const extend = Math.max(0, Math.min(1, e));
+      targetArmR = { rx: 0.3, rz: -1.0 - extend * 0.4 };
+      targetArmL = { rx: 1.1, rz: 0.4 };
+      bodyRot = extend * 0.3;
+      bodyZ = -extend * 0.1;
+      if (f.stateTimer > 0.55) setFighterState(f, 'idle');
+      break;
+    }
+    case 'block': {
+      targetArmL = { rx: -0.3, rz: 0.3 };
+      targetArmR = { rx: -0.3, rz: -0.3 };
+      bodyZ = 0.08;
+      if (f.stateTimer > 0.4) setFighterState(f, 'idle');
+      break;
+    }
+    case 'stagger': {
+      const k = Math.min(1, f.stateTimer / 0.25);
+      bodyTilt = -0.4 * (1 - Math.abs(k - 0.5) * 2);
+      bodyZ = 0.3 * k;
+      targetArmL = { rx: 0.6, rz: 0.7 };
+      targetArmR = { rx: 0.6, rz: -0.7 };
+      if (f.stateTimer > 0.5) setFighterState(f, 'idle');
+      break;
+    }
+    case 'ko': {
+      // Lay down (flat on back)
+      const k = Math.min(1, f.stateTimer / 1.2);
+      g.position.y = -k * 0.0;
+      // Pin the fighter, rotate to lay flat
+      const targetTilt = -Math.PI / 2;
+      // We use bodyTilt slot to drive torso tilt (but here we tilt the entire group)
+      g.rotation.x = targetTilt * k;
+      // Slide back slightly when falling
+      g.position.z = (f.koZ ?? 0) - k * 0.6;
+      // Arms splay
+      targetArmL = { rx: 0.2, rz: 1.2 };
+      targetArmR = { rx: 0.2, rz: -1.2 };
+      break;
+    }
+    case 'victory': {
+      // Arms up celebrating
+      targetArmL = { rx: -2.2, rz: 0.5 };
+      targetArmR = { rx: -2.2, rz: -0.5 };
+      bobY = Math.abs(Math.sin(phase * 1.5)) * 0.18;
+      break;
+    }
+  }
+
+  // Apply arm rotations (smooth lerp)
+  f.armL.rotation.x = THREE.MathUtils.lerp(f.armL.rotation.x, targetArmL.rx, 0.45);
+  f.armL.rotation.z = THREE.MathUtils.lerp(f.armL.rotation.z, targetArmL.rz, 0.45);
+  f.armR.rotation.x = THREE.MathUtils.lerp(f.armR.rotation.x, targetArmR.rx, 0.45);
+  f.armR.rotation.z = THREE.MathUtils.lerp(f.armR.rotation.z, targetArmR.rz, 0.45);
+
+  // Body bob (only when not in KO state)
+  // bodyZ is the fighter's local-forward lean (negative = leaning toward opponent).
+  // In world space, that corresponds to motion along the x-axis (the fighters face each other on x).
+  // Left fighter (side=-1) faces +x; right fighter (side=+1) faces -x. facing = -f.side.
+  if (f.state !== 'ko') {
+    const facing = -f.side;
+    g.position.y = bobY;
+    g.position.x = f.side * 1.8 + (-bodyZ) * facing;
+    g.position.z = 0;
+    g.rotation.x = 0;
+    f.torso.rotation.z = bodyTilt;
+    f.torso.rotation.y = bodyRot;
+    f.headGroup.rotation.z = bodyTilt * 0.5;
+  }
+
+  f.stateTimer += dt;
+}
+
+/* ----- Audio (synthesized) ----- */
+let audioCtx = null;
+function ensureAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playBell() {
+  ensureAudio();
+  triggerBellSwing(1.0);
+  const t = audioCtx.currentTime;
+  // Multiple sine partials for a bell-like timbre
+  const partials = [
+    { f: 520, a: 0.4, d: 1.8 },
+    { f: 780, a: 0.25, d: 1.4 },
+    { f: 1100, a: 0.18, d: 1.1 },
+    { f: 1640, a: 0.12, d: 0.7 },
+  ];
+  partials.forEach(p => {
+    const o = audioCtx.createOscillator();
+    o.type = 'sine';
+    o.frequency.value = p.f;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(p.a, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + p.d);
+    o.connect(g).connect(audioCtx.destination);
+    o.start(t);
+    o.stop(t + p.d);
+  });
+}
+function playPunch(power = 1) {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  // Low thud
+  const o = audioCtx.createOscillator();
+  o.type = 'sine';
+  o.frequency.setValueAtTime(180 * power, t);
+  o.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.3 * power, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+  o.connect(g).connect(audioCtx.destination);
+  o.start(t);
+  o.stop(t + 0.2);
+
+  // Noise crack
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.05, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+  const n = audioCtx.createBufferSource();
+  n.buffer = buf;
+  const ng = audioCtx.createGain();
+  ng.gain.value = 0.18 * power;
+  n.connect(ng).connect(audioCtx.destination);
+  n.start(t);
+}
+function playCrowd() {
+  ensureAudio();
+  const t = audioCtx.currentTime;
+  const buf = audioCtx.createBuffer(1, audioCtx.sampleRate * 1.4, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    const env = Math.min(1, i / 6000) * Math.min(1, (data.length - i) / 6000);
+    data[i] = (Math.random() * 2 - 1) * env * 0.25;
+  }
+  const n = audioCtx.createBufferSource();
+  n.buffer = buf;
+  const g = audioCtx.createGain();
+  g.gain.value = 0.45;
+  // band-pass to roar
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = 'bandpass';
+  bp.frequency.value = 600;
+  bp.Q.value = 0.7;
+  n.connect(bp).connect(g).connect(audioCtx.destination);
+  n.start(t);
+}
+
+/* ----- Bout Choreography ----- */
+function planBout(b1, b2) {
+  const key = mkKey(b1, b2);
+  const match = MATCHUPS[key];
+  if (!match) {
+    return {
+      winner: b1, loser: b2,
+      move: 'an inconclusive shrug',
+      quip: 'A schism was declared. Both fighters went home to write differently-worded essays about it.',
+    };
+  }
+  const winner = match.winner;
+  const loser = (winner === b1) ? b2 : b1;
+  return { winner, loser, move: match.move, quip: match.quip };
+}
+
+function generateEvents(durationS, winnerIsRight) {
+  // Generate a sequence of punches/dodges over the duration.
+  // Winner lands more punches; loser staggers at the end.
+  const events = [];
+  let t = 1.0;
+  while (t < durationS - 3.0) {
+    const winnerAttacks = Math.random() < 0.65;
+    const attacker = winnerAttacks ? 'winner' : 'loser';
+    const defender = winnerAttacks ? 'loser' : 'winner';
+    const moveRoll = Math.random();
+    const move = moveRoll < 0.45 ? 'jab' : moveRoll < 0.78 ? 'cross' : 'hook';
+    events.push({ t, type: 'attack', attacker, defender, move, lands: winnerAttacks || Math.random() < 0.5 });
+    t += 0.55 + Math.random() * 0.7;
+  }
+  // Final stagger + finishing move at the end
+  events.push({ t: durationS - 2.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'cross', lands: true, big: true });
+  events.push({ t: durationS - 2.2, type: 'stagger', who: 'loser' });
+  events.push({ t: durationS - 1.6, type: 'attack', attacker: 'winner', defender: 'loser', move: 'hook', lands: true, finisher: true });
+  events.push({ t: durationS - 1.2, type: 'ko', who: 'loser' });
+  events.push({ t: durationS - 0.6, type: 'victory', who: 'winner' });
+  return events;
+}
+
+function clearFighters() {
+  fighters.forEach(f => scene.remove(f.group));
+  fighters = [];
+}
+
+function startBout(b1, b2) {
+  clearFighters();
+  // Hide notecard / replay
+  document.getElementById('notecard-wrap').classList.remove('show');
+  document.getElementById('replay').classList.remove('show');
+  document.getElementById('fighter-tags').classList.add('show');
+  document.getElementById('timer').classList.add('show');
+
+  // Spawn fighters
+  const f1 = buildFighter(b1, -1); // left/blue
+  const f2 = buildFighter(b2, 1);  // right/red
+  scene.add(f1.group);
+  scene.add(f2.group);
+  fighters = [f1, f2];
+
+  // Tag display
+  document.getElementById('tag1').textContent = b1.toUpperCase();
+  document.getElementById('tag2').textContent = b2.toUpperCase();
+
+  // Move ring girl off-stage
+  ringGirl.group.visible = false;
+  ringGirl.group.position.set(0, 0, 7);
+  ringGirl.armL.rotation.set(0, 0, 0);
+  ringGirl.armR.rotation.set(0, 0, 0);
+  ringGirl.card.position.set(0.4, 1.5, 0);
+
+  // Plan bout
+  const plan = planBout(b1, b2);
+  const winnerIsB1 = plan.winner === b1;
+  const winnerFighter = winnerIsB1 ? f1 : f2;
+  const loserFighter = winnerIsB1 ? f2 : f1;
+
+  const duration = 28 + Math.random() * 3; // ~28-31s of action
+  const events = generateEvents(duration, !winnerIsB1);
+
+  bout = {
+    startTime: clock.getElapsedTime(),
+    duration,
+    winner: winnerFighter,
+    loser: loserFighter,
+    winnerName: plan.winner,
+    loserName: plan.loser,
+    move: plan.move,
+    quip: plan.quip,
+    events,
+    eventIdx: 0,
+    state: 'fighting',
+    finalShown: false,
+  };
+
+  // Round 1 banner
+  const ri = document.getElementById('round-info');
+  ri.textContent = 'ROUND 1';
+  ri.classList.remove('show');
+  void ri.offsetWidth;
+  ri.classList.add('show');
+
+  // Bell + crowd
+  playBell();
+  setTimeout(playBell, 280);
+  setTimeout(playCrowd, 350);
+
+  // Disable button until bout finishes
+  document.getElementById('ringbell').disabled = true;
+  document.getElementById('ringbell').textContent = 'FIGHTING…';
+}
+
+function endBout() {
+  if (!bout) return;
+  bout.state = 'verdict';
+  document.getElementById('timer').classList.remove('show');
+
+  // Final bell
+  playBell();
+  setTimeout(playBell, 220);
+
+  // Show ring girl walking in
+  ringGirl.group.visible = true;
+  ringGirl.group.position.set(0, 0, 7);
+  ringGirl.entryStart = clock.getElapsedTime();
+
+  // Populate notecard
+  const winnerName = bout.winnerName;
+  const loserName = bout.loserName;
+  const move = bout.move;
+  const quip = bout.quip;
+  document.getElementById('nc-winner').textContent =
+    `${winnerName.toUpperCase()} defeats ${loserName.toUpperCase()}`;
+  document.getElementById('nc-move').textContent =
+    `Winning move: ${move}.`;
+  document.getElementById('nc-quip').textContent = `“${quip}”`;
+
+  // Reveal card after the ring girl finishes walking + raising
+  setTimeout(() => {
+    document.getElementById('notecard-wrap').classList.add('show');
+    document.getElementById('replay').classList.add('show');
+    document.getElementById('ringbell').disabled = false;
+    document.getElementById('ringbell').textContent = 'RING THE BELL';
+  }, 3400);
+}
+
+/* ----- Per-frame update ----- */
+function updateBout(t, dt) {
+  if (!bout) return;
+  const elapsed = t - bout.startTime;
+
+  // Update timer display
+  const remaining = Math.max(0, Math.ceil(bout.duration - elapsed));
+  document.getElementById('timer').textContent = remaining;
+
+  // Process scheduled events
+  while (bout.eventIdx < bout.events.length && bout.events[bout.eventIdx].t <= elapsed) {
+    const ev = bout.events[bout.eventIdx];
+    handleEvent(ev);
+    bout.eventIdx++;
+  }
+
+  // End-of-bout transition
+  if (bout.state === 'fighting' && elapsed >= bout.duration) {
+    endBout();
+  }
+
+  // Animate ring girl entry + card raise
+  if (bout.state === 'verdict' && ringGirl.entryStart != null) {
+    const e = t - ringGirl.entryStart;
+    // Walk from z=7 to z=2 over 2 seconds
+    const walkT = Math.min(1, e / 2.0);
+    const eased = walkT * walkT * (3 - 2 * walkT);
+    ringGirl.group.position.z = 7 - eased * 5; // ends at 2
+    // bob legs slightly
+    ringGirl.group.position.y = Math.abs(Math.sin(e * 7)) * 0.06 * (1 - walkT);
+    // After walk, raise card
+    if (e > 1.9) {
+      const rT = Math.min(1, (e - 1.9) / 1.0);
+      const re = rT * rT * (3 - 2 * rT);
+      // Right arm rotates up, card follows
+      ringGirl.armR.rotation.x = -re * 2.6;
+      ringGirl.card.position.set(0.1, 1.5 + re * 1.4, -0.2 + re * 0.3);
+      ringGirl.card.rotation.z = re * 0.1;
+    }
+  }
+}
+
+function handleEvent(ev) {
+  if (!bout) return;
+  const winner = bout.winner;
+  const loser = bout.loser;
+
+  if (ev.type === 'attack') {
+    const att = ev.attacker === 'winner' ? winner : loser;
+    const def = ev.defender === 'winner' ? winner : loser;
+    setFighterState(att, ev.move);
+    if (ev.lands) {
+      // small recoil on defender
+      setTimeout(() => {
+        if (def.state !== 'ko') {
+          // Brief flinch via stagger-lite
+          def.bobPhase += 1.3;
+          // Tiny push back
+          // (No direct position change; idle bob covers it)
+        }
+      }, 180);
+      setTimeout(() => playPunch(ev.big || ev.finisher ? 1.6 : 1.0), 200);
+    }
+  } else if (ev.type === 'stagger') {
+    const who = ev.who === 'winner' ? winner : loser;
+    setFighterState(who, 'stagger');
+    setTimeout(playCrowd, 200);
+  } else if (ev.type === 'ko') {
+    const who = ev.who === 'winner' ? winner : loser;
+    who.koZ = who.group.position.z;
+    setFighterState(who, 'ko');
+    playPunch(2.0);
+    setTimeout(playCrowd, 100);
+  } else if (ev.type === 'victory') {
+    const who = ev.who === 'winner' ? winner : loser;
+    setFighterState(who, 'victory');
+  }
+}
+
+/* ============================================================
+   MAIN LOOP
+   ============================================================ */
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  const dt = Math.min(0.05, clock.getDelta());
+
+  // Update audience sway
+  audience.children.forEach(c => {
+    c.position.y = c.userData.baseY + Math.sin(t * 2.5 + c.userData.basePhase) * 0.04;
+  });
+
+  // Brass bell swing — damped oscillation; clapper lags for clang feel
+  if (bellSwingEnergy > 0.005) {
+    bellSwingTime += dt;
+    bellSwingEnergy *= Math.pow(0.35, dt); // decay
+    const swing = Math.sin(bellSwingTime * 16) * bellSwingEnergy * 0.55;
+    brassBell.pivot.rotation.z = swing;
+    // Clapper offset (phase-lagged) — gives the impression of an inner clapper striking the walls
+    brassBell.clapperBall.position.x = Math.sin(bellSwingTime * 16 + 1.1) * bellSwingEnergy * 0.18;
+  } else {
+    brassBell.pivot.rotation.z *= 0.9;
+    brassBell.clapperBall.position.x *= 0.9;
+  }
+
+  // Update fighters
+  fighters.forEach(f => updateFighter(f, t, dt));
+
+  // Update bout
+  if (bout) updateBout(t, dt);
+
+  // Subtle camera sway
+  camera.position.x = Math.sin(t * 0.1) * 0.3;
+  camera.lookAt(0, 1.5, 0);
 
   renderer.render(scene, camera);
 }
-tick();
+
+/* ============================================================
+   UI WIRING
+   ============================================================ */
+function populateSelects() {
+  const s1 = document.getElementById('fighter1');
+  const s2 = document.getElementById('fighter2');
+  BELIEFS.forEach((b, i) => {
+    const o1 = document.createElement('option');
+    o1.value = b; o1.textContent = b;
+    s1.appendChild(o1);
+    const o2 = document.createElement('option');
+    o2.value = b; o2.textContent = b;
+    s2.appendChild(o2);
+  });
+  s1.value = 'Catholicism';
+  s2.value = 'Science';
+}
+populateSelects();
+
+document.getElementById('ringbell').addEventListener('click', () => {
+  ensureAudio();
+  const b1 = document.getElementById('fighter1').value;
+  const b2 = document.getElementById('fighter2').value;
+  if (b1 === b2) {
+    // Same-vs-same: pick a random different one for B2
+    const others = BELIEFS.filter(x => x !== b1);
+    document.getElementById('fighter2').value = others[Math.floor(Math.random() * others.length)];
+  }
+  startBout(
+    document.getElementById('fighter1').value,
+    document.getElementById('fighter2').value
+  );
+});
+
+document.getElementById('replay').addEventListener('click', () => {
+  document.getElementById('notecard-wrap').classList.remove('show');
+  document.getElementById('replay').classList.remove('show');
+  // Same matchup again, with fresh bell ring
+  startBout(
+    document.getElementById('fighter1').value,
+    document.getElementById('fighter2').value
+  );
+});
+
+// Friendly idle preview: build two placeholder fighters
+function showIdleDemo() {
+  const f1 = buildFighter('Catholicism', -1);
+  const f2 = buildFighter('Science', 1);
+  scene.add(f1.group);
+  scene.add(f2.group);
+  fighters = [f1, f2];
+  document.getElementById('tag1').textContent = 'CATHOLICISM';
+  document.getElementById('tag2').textContent = 'SCIENCE';
+  document.getElementById('fighter-tags').classList.add('show');
+}
+showIdleDemo();
+
+animate();
 </script>
 </body>
 </html>
